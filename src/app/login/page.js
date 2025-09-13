@@ -1,117 +1,74 @@
 "use client";
-
-import React, { useState } from "react";
-import { TextField, Button, Box, Typography, Paper } from "@mui/material";
-import { encrypt, decryptMethod } from "../../api/cripto"; // ✅ your crypto utils
-import axios from "axios";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const LoginScreen = () => {
+export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const router = useRouter();
 
-  const handleLogin = async () => {
-    if (!username || !password) {
-      alert("Please enter both username and password");
-      return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-    const payload = {
-      username,
-      password,
-      app_key: "com.mirrorinfo",
-    };
-
-    try {
-      // 🔐 Encrypt payload before sending
-      const encrypted = encrypt(JSON.stringify(payload));
-      setLoading(true);
-
-      console.log("🔹 Raw payload:", payload);
-      console.log("🔹 Encrypted payload:", encrypted);
-
-      // 🚀 API request
-      const res = await axios.post(
-        "https://api.mayway.in/api/users/2736fab291f04e69b62d490c3c09361f5b82461a",
-        { data: encrypted },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
-
-      console.log("✅ Status:", res.status);
-      console.log("✅ Raw response:", res.data);
-
-      let parsedResponse;
-
-      if (res.data?.data) {
-        // 🔓 Decrypt backend encrypted response
-        const decrypted = decryptMethod(res.data.data);
-        console.log("🔓 Decrypted response:", decrypted);
-
-        parsedResponse = JSON.parse(decrypted);
-      } else {
-        // If API returns plain JSON
-        parsedResponse = res.data;
-      }
-
-      // ✅ Handle login success/failure
-      if (parsedResponse?.success) {
-        localStorage.setItem("user", JSON.stringify(parsedResponse));
-        router.push("/dashboard"); // Redirect to dashboard
-      } else {
-        alert(parsedResponse?.message || "Invalid credentials.");
-      }
-    } catch (err) {
-      console.error("❌ Login failed:", err);
-      alert("Something went wrong. Please try again later.");
-    } finally {
-      setLoading(false);
+    // Dummy login check
+    if (username === "admin" && password === "1234") {
+      router.push("/dashboard"); // success → redirect
+    } else {
+      setError("Invalid username or password");
     }
   };
 
   return (
-    <Box className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Paper elevation={3} className="p-6 w-96">
-        <Typography variant="h5" gutterBottom>
+    <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
+        <h2 className="mb-6 text-center text-2xl font-bold text-gray-700">
           Login
-        </Typography>
+        </h2>
 
-        <TextField
-          label="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
+        {error && (
+          <div className="mb-4 rounded bg-red-100 p-2 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
-        <TextField
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          margin="normal"
-        />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Username
+            </label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:ring focus:ring-blue-200"
+              placeholder="Enter username"
+              required
+            />
+          </div>
 
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 2 }}
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? "Logging in..." : "Login"}
-        </Button>
-      </Paper>
-    </Box>
+          <div>
+            <label className="block text-sm font-medium text-gray-600">
+              Password
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:border-blue-500 focus:ring focus:ring-blue-200"
+              placeholder="Enter password"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded-lg bg-blue-600 p-2 font-semibold text-white hover:bg-blue-700"
+          >
+            Login
+          </button>
+        </form>
+      </div>
+    </div>
   );
-};
-
-export default LoginScreen;
+}

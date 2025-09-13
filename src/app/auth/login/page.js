@@ -1,130 +1,91 @@
 "use client";
 
-import React, { useState } from "react";
-import { TextField, Button, Box, Typography, Paper } from "@mui/material";
-import { encrypt, decryptMethod } from "../../../api/cripto";
-import axios from "axios";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+// import api from "@/utils/api"; // your axios instance
+import { decryptMethod,encrypt } from "@/api/cripto";
+import axios from "axios";
 
-const LoginScreen = () => {
+export default function LoginPage() {
+  const router = useRouter();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    setError("");
     if (!username || !password) {
-      alert("Please enter both username and password");
+      setError("Username and password are required");
       return;
     }
 
-    const payload = {
-      username,
-      password,
-      app_key: "com.mirrorinfo", // must match backend expectation
-    };
-
-    const encrypted = encrypt(JSON.stringify(payload));
     setLoading(true);
 
     try {
-      console.log("🔹 Raw payload:", payload);
-      console.log("🔹 Encrypted payload:", encrypted);
+      // Prepare original data
+      const originalText = {
+        username: username,
+        password: password,
+        app_key: "com.mirrorinfo",
+      };
 
-      const res = await axios.post(
-        "https://api.mayway.in/api/users/2736fab291f04e69b62d490c3c09361f5b82461a",
-        { data: encrypted },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-        }
-      );
+      // Encrypt the request
+      const encrypted = encrypt(JSON.stringify(originalText));
 
-      console.log("✅ Status:", res.status);
-      console.log("✅ Raw response:", res.data);
+      // Call login API
+      const response = await axios.post("https://api.mayway.in/api/users/2736fab291f04e69b62d490c3c09361f5b82461a", { encReq: encrypted });
 
-      let parsedResponse = null;
+      // Decrypt response
+      const decrypted = decryptMethod(response.data);
 
-      if (res.data?.data) {
-        // Backend sent encrypted response
-        try {
-          const decrypted = decryptMethod(res.data.data);
-          console.log("🔓 Decrypted response:", decrypted);
-          parsedResponse = JSON.parse(decrypted);
-        } catch (err) {
-          console.error("❌ Failed to decrypt server response:", err);
-          alert("Error decrypting server response.");
-          return;
-        }
-      } else {
-        // Backend sent plain JSON
-        parsedResponse = res.data;
-      }
+      if (decrypted.status === 200) {
+        // Save user data in localStorage
+        localStorage.setItem("userData", JSON.stringify(decrypted.data));
 
-      if (parsedResponse?.success) {
-        localStorage.setItem("user", JSON.stringify(parsedResponse));
+        // Redirect to dashboard
         router.push("/dashboard");
       } else {
-        alert(parsedResponse?.message || "Invalid credentials, please try again.");
+        setError(decrypted.message || "Login failed");
       }
     } catch (err) {
-      console.error("❌ Login failed:", err);
-
-      if (err.response) {
-        console.error("❌ Server status:", err.response.status);
-        console.error("❌ Server response:", err.response.data);
-        alert(`Login failed: ${err.response.data?.message || "Server error"}`);
-      } else if (err.request) {
-        console.error("❌ No response from server:", err.request);
-        alert("No response from server. Please check your network.");
-      } else {
-        console.error("❌ Error details:", err.message);
-        alert("Something went wrong. Please try again later.");
-      }
+      console.error(err);
+      setError("Something went wrong");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Box className="flex items-center justify-center min-h-screen bg-gray-100">
-      <Paper elevation={3} className="p-6 w-96">
-        <Typography variant="h5" gutterBottom>
-          Login
-        </Typography>
-
-        <TextField
-          label="Username"
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="w-full max-w-md bg-white p-8 rounded shadow">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        {error && (
+          <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>
+        )}
+        <input
+          type="text"
+          placeholder="Username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          fullWidth
-          margin="normal"
+          className="w-full border p-2 mb-4 rounded"
         />
-
-        <TextField
-          label="Password"
+        <input
           type="password"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          fullWidth
-          margin="normal"
+          className="w-full border p-2 mb-4 rounded"
         />
-
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          sx={{ mt: 2 }}
+        <button
           onClick={handleLogin}
           disabled={loading}
+          className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
         >
           {loading ? "Logging in..." : "Login"}
-        </Button>
-      </Paper>
-    </Box>
+        </button>
+      </div>
+    </div>
   );
-};
-
-export default LoginScreen;
+}

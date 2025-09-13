@@ -12,7 +12,7 @@ const nextConfig = {
         source: "/api/:path*",
         // destination: "http://localhost:3002/api/:path*", // backend
 
-        destination: "https://secure1.mirrorhub.in/api/:path*",
+        destination: "https://api.mayway.in/api/:path*",
       },
     ];
   },

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { FaHeart, FaShoppingCart, FaTrash, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 
 export default function WishlistScreen({ userId = "12345" }) {
@@ -9,7 +10,7 @@ export default function WishlistScreen({ userId = "12345" }) {
   const [error, setError] = useState(null);
   const [processingItems, setProcessingItems] = useState(new Set());
 
-  // Mock data for demonstration (since API has CORS issues)
+  // Mock data for demo
   const mockWishlist = [
     {
       _id: "68b92bf4dcf049943c146448",
@@ -33,24 +34,17 @@ export default function WishlistScreen({ userId = "12345" }) {
     }
   ];
 
-  useEffect(() => {
-    fetchWishlist();
-  }, [userId]);
-
-  const fetchWishlist = async () => {
+  const fetchWishlist = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Try to fetch from API first
+
       try {
         const response = await fetch(`https://secure1.mirrorhub.in/api/wishlist/${userId}`, {
           mode: 'cors',
-          headers: {
-            'Accept': 'application/json',
-          }
+          headers: { 'Accept': 'application/json' },
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
@@ -58,13 +52,12 @@ export default function WishlistScreen({ userId = "12345" }) {
             return;
           }
         }
+        throw new Error('API fetch failed');
       } catch (apiError) {
         console.warn('API fetch failed, using mock data:', apiError);
+        setWishlist(mockWishlist);
+        setError('Using demo data due to API restrictions.');
       }
-      
-      // Fall back to mock data if API fails
-      setWishlist(mockWishlist);
-      
     } catch (err) {
       console.error('Error fetching wishlist:', err);
       setError('Failed to load wishlist. Using demo data.');
@@ -72,21 +65,18 @@ export default function WishlistScreen({ userId = "12345" }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchWishlist();
+  }, [fetchWishlist]);
 
   const removeFromWishlist = async (productId) => {
     try {
       setProcessingItems(prev => new Set(prev).add(productId));
-      
-      // Simulate API call - in a real implementation, you would call a DELETE endpoint
-      console.log(`Would remove product ${productId} from wishlist`);
-      
-      // Remove from local state
       setWishlist(prev => prev.filter(item => item._id !== productId));
-      
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
-      
     } catch (err) {
       console.error('Error removing item:', err);
       alert('Failed to remove item from wishlist');
@@ -102,17 +92,10 @@ export default function WishlistScreen({ userId = "12345" }) {
   const moveToCart = async (product) => {
     try {
       setProcessingItems(prev => new Set(prev).add(product._id));
-      
-      // Simulate API call since we can't call the actual API due to CORS
-      console.log(`Would add product ${product._id} to cart`);
-      
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Remove from wishlist after "successful" addition to cart
       await removeFromWishlist(product._id);
       alert('Item moved to cart successfully! (Demo mode)');
-      
     } catch (err) {
       console.error('Error moving to cart:', err);
       alert('Failed to move item to cart');
@@ -140,7 +123,6 @@ export default function WishlistScreen({ userId = "12345" }) {
     <div className="min-h-screen bg-gray-50 pt-24 pb-12 px-4 md:px-10">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-3xl font-bold text-gray-800">My Wishlist</h2>
-        
         {error && (
           <div className="flex items-center bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
             <FaExclamationTriangle className="text-yellow-500 mr-2" />
@@ -148,7 +130,7 @@ export default function WishlistScreen({ userId = "12345" }) {
           </div>
         )}
       </div>
-  
+
       {wishlist.length === 0 ? (
         <div className="text-center py-12">
           <div className="bg-white rounded-xl shadow-sm p-8 max-w-md mx-auto">
@@ -167,30 +149,29 @@ export default function WishlistScreen({ userId = "12345" }) {
         <>
           <div className="mb-4 text-sm text-gray-500">
             Showing {wishlist.length} item{wishlist.length !== 1 ? 's' : ''}
-            {error && ' (demo data due to API restrictions)'}
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {wishlist.map((item) => {
               const isProcessing = processingItems.has(item._id);
-              
+
               return (
-                <div
-                  key={item._id}
-                  className="bg-white rounded-xl shadow hover:shadow-md transition-all overflow-hidden relative"
-                >
+                <div key={item._id} className="bg-white rounded-xl shadow hover:shadow-md transition relative">
                   {isProcessing && (
                     <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
                       <FaSpinner className="animate-spin text-2xl text-blue-600" />
                     </div>
                   )}
-                  
+
                   <div className="relative w-full h-48 bg-gray-100">
                     {item.images && item.images.length > 0 ? (
-                      <img
+                      <Image
                         src={item.images[0].url}
                         alt={item.productName}
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        onError={(e) => { e.currentTarget.src = '/fallback.png'; }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -198,34 +179,24 @@ export default function WishlistScreen({ userId = "12345" }) {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-1 line-clamp-2">
-                      {item.productName}
-                    </h3>
-                    <p className="text-blue-600 font-bold text-base">
-                      ₹{item.finalPrice?.toLocaleString('en-IN') || 'N/A'}
-                    </p>
-                    
+                    <h3 className="font-semibold text-gray-800 text-lg mb-1 line-clamp-2">{item.productName}</h3>
+                    <p className="text-blue-600 font-bold text-base">₹{item.finalPrice?.toLocaleString('en-IN') || 'N/A'}</p>
+
                     {item.ratings?.average > 0 && (
                       <div className="flex items-center mt-2">
                         <div className="flex text-yellow-400">
                           {[...Array(5)].map((_, i) => (
-                            <svg
-                              key={i}
-                              className={`w-4 h-4 ${i < Math.floor(item.ratings.average) ? 'fill-current' : 'text-gray-300'}`}
-                              viewBox="0 0 20 20"
-                            >
+                            <svg key={i} className={`w-4 h-4 ${i < Math.floor(item.ratings.average) ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
                               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                             </svg>
                           ))}
                         </div>
-                        <span className="text-sm text-gray-500 ml-1">
-                          ({item.ratings.count || 0})
-                        </span>
+                        <span className="text-sm text-gray-500 ml-1">({item.ratings.count || 0})</span>
                       </div>
                     )}
-                    
+
                     <div className="flex justify-between items-center mt-4">
                       <button
                         onClick={() => moveToCart(item)}

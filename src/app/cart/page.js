@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { FaSpinner, FaExclamationTriangle, FaTrash, FaShoppingCart } from 'react-icons/fa';
@@ -44,19 +44,13 @@ export default function Cart({ userId = "12345" }) {
     }
   ];
 
-  useEffect(() => {
-    fetchCartItems();
-  }, [userId]);
-
-  const fetchCartItems = async () => {
+  const fetchCartItems = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // Try to fetch from API first
+
       try {
         const response = await fetch(`/api/cart/get/${userId}`);
-        
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.data) {
@@ -69,7 +63,7 @@ export default function Cart({ userId = "12345" }) {
         console.warn('API fetch failed, using mock data:', apiError);
         throw apiError;
       }
-      
+
     } catch (err) {
       console.error('Error fetching cart:', err);
       setError('Failed to load cart. Using demo data.');
@@ -77,7 +71,11 @@ export default function Cart({ userId = "12345" }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchCartItems();
+  }, [fetchCartItems]);
 
   const handleContinue = () => {
     router.push('/checkout');
@@ -86,51 +84,36 @@ export default function Cart({ userId = "12345" }) {
   const handleQtyChange = async (itemId, change) => {
     try {
       setUpdatingItems(prev => new Set(prev).add(itemId));
-      
       const item = cartItems.find(item => item._id === itemId);
       if (!item) return;
 
       const newQuantity = Math.max(1, item.quantity + change);
-      
-      // Update local state immediately for better UX
-      setCartItems(prev => 
-        prev.map(item => 
-          item._id === itemId 
-            ? { ...item, quantity: newQuantity } 
-            : item
+
+      setCartItems(prev =>
+        prev.map(item =>
+          item._id === itemId ? { ...item, quantity: newQuantity } : item
         )
       );
 
-      // Try to update via API
       try {
         const response = await fetch('/api/cart/update', {
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
             productId: item.productId?._id || item._id,
             quantity: newQuantity
           }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to update quantity');
-        }
-
+        if (!response.ok) throw new Error('Failed to update quantity');
         const data = await response.json();
-        if (!data.success) {
-          throw new Error('Failed to update quantity');
-        }
+        if (!data.success) throw new Error('Failed to update quantity');
       } catch (updateError) {
-        console.warn('API update failed, using local state:', updateError);
-        // Keep the local change even if API fails
+        console.warn('API update failed, keeping local state:', updateError);
       }
-      
+
     } catch (err) {
       console.error('Error changing quantity:', err);
-      // Revert local change on error
       fetchCartItems();
     } finally {
       setUpdatingItems(prev => {
@@ -144,42 +127,29 @@ export default function Cart({ userId = "12345" }) {
   const removeItem = async (itemId) => {
     try {
       setUpdatingItems(prev => new Set(prev).add(itemId));
-      
       const item = cartItems.find(item => item._id === itemId);
       if (!item) return;
 
-      // Remove from local state immediately
-      setCartItems(prev => prev.filter(item => item._id !== itemId));
-      
-      // Try to remove via API
+      setCartItems(prev => prev.filter(i => i._id !== itemId));
+
       try {
         const response = await fetch('/api/cart/remove', {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId,
             productId: item.productId?._id || item._id
           }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to remove item');
-        }
-
+        if (!response.ok) throw new Error('Failed to remove item');
         const data = await response.json();
-        if (!data.success) {
-          throw new Error('Failed to remove item');
-        }
+        if (!data.success) throw new Error('Failed to remove item');
       } catch (removeError) {
-        console.warn('API remove failed:', removeError);
-        // Keep the local change even if API fails
+        console.warn('API remove failed, keeping local state:', removeError);
       }
-      
+
     } catch (err) {
       console.error('Error removing item:', err);
-      // Revert local change on error
       fetchCartItems();
     } finally {
       setUpdatingItems(prev => {
@@ -191,47 +161,30 @@ export default function Cart({ userId = "12345" }) {
   };
 
   const clearCart = async () => {
-    if (!confirm('Are you sure you want to clear your entire cart?')) {
-      return;
-    }
+    if (!confirm('Are you sure you want to clear your entire cart?')) return;
 
     try {
       setClearingCart(true);
-      
-      // Clear local state immediately
       setCartItems([]);
-      
-      // Try to clear via API
+
       try {
         const response = await fetch('/api/cart/clear', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId }),
         });
-
-        if (!response.ok) {
-          throw new Error('Failed to clear cart');
-        }
-
+        if (!response.ok) throw new Error('Failed to clear cart');
         const data = await response.json();
-        if (!data.success) {
-          throw new Error('Failed to clear cart');
-        }
-
+        if (!data.success) throw new Error('Failed to clear cart');
         alert('Cart cleared successfully!');
       } catch (clearError) {
         console.warn('API clear failed:', clearError);
-        alert('Cart cleared locally, but there was an issue with the server.');
+        alert('Cart cleared locally, but server failed.');
       }
-      
+
     } catch (err) {
       console.error('Error clearing cart:', err);
       alert('Failed to clear cart. Please try again.');
-      // Revert local change on error
       fetchCartItems();
     } finally {
       setClearingCart(false);
@@ -263,7 +216,7 @@ export default function Cart({ userId = "12345" }) {
             <h2 className="text-xl font-semibold text-blue-800">
               🛒 Product Details ({cartItems.length} items)
             </h2>
-            
+
             <div className="flex items-center gap-2">
               {error && (
                 <div className="flex items-center bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1">
@@ -271,7 +224,7 @@ export default function Cart({ userId = "12345" }) {
                   <span className="text-yellow-700 text-xs">Demo data</span>
                 </div>
               )}
-              
+
               {cartItems.length > 0 && (
                 <button
                   onClick={clearCart}
@@ -309,7 +262,7 @@ export default function Cart({ userId = "12345" }) {
               const itemPrice = item.finalPrice || item.price;
               const itemTotal = itemPrice * item.quantity;
               const productName = item.productId?.productName || item.name;
-              
+
               return (
                 <div
                   key={item._id}
@@ -320,47 +273,42 @@ export default function Cart({ userId = "12345" }) {
                       <FaSpinner className="animate-spin text-2xl text-blue-600" />
                     </div>
                   )}
-                  
-                  <img
+
+                  <Image
                     src={item.image}
                     alt={productName}
-                    className="w-20 h-20 object-cover rounded"
-                    onError={(e) => {
-                      e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2YzZjRmNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkeT0iLjM1ZW0iIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjAiIGZpbGw9IiM5OTk5OTkiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
-                    }}
+                    width={80}
+                    height={80}
+                    className="object-cover rounded"
+                    onError={(e) => { e.currentTarget.src='/fallback.png' }}
                   />
+
                   <div className="flex-1">
                     <div className="flex justify-between items-start">
                       <h3 className="font-semibold text-gray-800">{productName}</h3>
                     </div>
-                    
+
                     {item.variant && (
                       <p className="text-sm text-gray-500 mt-1">{item.variant}</p>
                     )}
-                    
-                    <p className="text-gray-600 mt-1 text-sm">
-                      All issue easy returns
-                    </p>
+
+                    <p className="text-gray-600 mt-1 text-sm">All issue easy returns</p>
 
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => handleQtyChange(item._id, -1)}
                         disabled={isUpdating || item.quantity <= 1}
                         className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-bold disabled:opacity-50"
-                      >
-                        −
-                      </button>
+                      >−</button>
                       <span className="font-semibold">{item.quantity}</span>
                       <button
                         onClick={() => handleQtyChange(item._id, 1)}
                         disabled={isUpdating}
                         className="px-2 py-1 bg-blue-100 text-blue-700 rounded font-bold disabled:opacity-50"
-                      >
-                        +
-                      </button>
+                      >+</button>
                     </div>
 
-                    <button 
+                    <button
                       onClick={() => removeItem(item._id)}
                       disabled={isUpdating}
                       className="mt-2 text-sm text-red-500 hover:underline disabled:opacity-50 flex items-center gap-1"
@@ -398,34 +346,33 @@ export default function Cart({ userId = "12345" }) {
               <span>Total Product Price</span>
               <span>₹{subtotal.toLocaleString('en-IN')}</span>
             </div>
-            
+
             {cartItems.some(item => item.discount > 0) && (
               <div className="flex justify-between text-green-600">
                 <span>Total Discount</span>
-                <span>- ₹{cartItems.reduce((acc, item) => 
+                <span>- ₹{cartItems.reduce((acc, item) =>
                   acc + ((item.price - (item.finalPrice || item.price)) * item.quantity), 0
                 ).toLocaleString('en-IN')}</span>
               </div>
             )}
-            
+
             <div className="flex justify-between">
               <span>Delivery Charges</span>
               <span className="text-green-600">FREE</span>
             </div>
-            
+
             <hr />
-            
+
             <div className="flex justify-between font-bold text-base text-lg">
               <span>Total Amount</span>
               <span>₹{subtotal.toLocaleString('en-IN')}</span>
             </div>
           </div>
-          
+
           <p className="text-xs text-gray-500 mt-3">
             Clicking on Continue will not deduct any money
           </p>
 
-          {/* Continue Button */}
           <button
             onClick={handleContinue}
             disabled={cartItems.length === 0}
@@ -435,20 +382,15 @@ export default function Cart({ userId = "12345" }) {
           </button>
 
           <div className="flex items-center gap-2 mt-4 text-xs bg-gray-100 p-2 rounded">
-            <img
+            <Image
               src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/delivery.png"
               alt="Delivery Safety"
-              className="w-10 h-10"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.marginLeft = '0';
-              }}
+              width={40}
+              height={40}
             />
             <div>
               <p className="font-semibold text-blue-800">Your Safety, Our Priority</p>
-              <p className="text-gray-600">
-                We ensure your package is safe at every point of contact.
-              </p>
+              <p className="text-gray-600">We ensure your package is safe at every point of contact.</p>
             </div>
           </div>
         </div>
