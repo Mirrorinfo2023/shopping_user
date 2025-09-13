@@ -25,70 +25,70 @@ import {
 
 // Services List with badges
 const services = [
-  { title: "Recharge", icon: <FaPhoneAlt />, link: "/recharge", badge: "5.0%" },
-  { title: "BBPS", icon: <FaMoneyCheckAlt />, link: "/bbps", badge: "5.0%" },
-  { title: "History", icon: <FaHistory />, link: "/transactions" },
-  { title: "Wallet", icon: <FaWallet />, link: "/wallet" },
-  { title: "Support", icon: <FaHeadset />, link: "/support" },
-  { title: "Taxation", icon: <FaFileInvoiceDollar />, link: "/taxation" },
-  { title: "Electricity", icon: <FaBolt />, link: "/electricity", badge: "5.0%" },
-  { title: "DTH", icon: <FaTv />, link: "/dth", badge: "5.0%" },
-  { title: "Gas", icon: <FaFire />, link: "/gas" },
-  { title: "Loan", icon: <FaMoneyCheckAlt />, link: "/loan" },
-  { title: "Insurance", icon: <FaShieldAlt />, link: "/insurance" },
-  { title: "Pan Card", icon: <FaIdCard />, link: "/pan-card" },
+  { title: "Recharge", icon: <FaPhoneAlt />, link: "/bbps-services/recharge", badge: "5.0%" },
+  { title: "BBPS", icon: <FaMoneyCheckAlt />, link: "/bbps-services/bbps", badge: "5.0%" },
+  { title: "History", icon: <FaHistory />, link: "/bbps-services/transactions" },
+  { title: "Wallet", icon: <FaWallet />, link: "/bbps-services/wallet" },
+  { title: "Support", icon: <FaHeadset />, link: "/bbps-services/support" },
+  { title: "Taxation", icon: <FaFileInvoiceDollar />, link: "/bbps-services/taxation" },
+  { title: "Electricity", icon: <FaBolt />, link: "/bbps-services/electricity", badge: "5.0%" },
+  { title: "DTH", icon: <FaTv />, link: "/bbps-services/dth", badge: "5.0%" },
+  { title: "Gas", icon: <FaFire />, link: "/bbps-services/gas" },
+  { title: "Loan", icon: <FaMoneyCheckAlt />, link: "/bbps-services/loan" },
+  { title: "Insurance", icon: <FaShieldAlt />, link: "/bbps-services/insurance" },
+  { title: "PanCard", icon: <FaIdCard />, link: "/bbps-services/pan-card" },
 ];
 
 // Dropdown Options
 const serviceOptionsMap = {
   Recharge: [
-    { title: "New Recharge", icon: <FaEdit />, href: "/recharge/new" },
-    { title: "Recharge History", icon: <FaHistory />, href: "/recharge/history" },
+    { title: "New Recharge", icon: <FaEdit />, href: "/bbps-services/recharge/new" },
+    { title: "Recharge History", icon: <FaHistory />, href: "/bbps-services/recharge/history" },
   ],
   BBPS: [
-    { title: "New Bill Payment", icon: <FaEdit />, href: "/bbps/new" },
-    { title: "BBPS History", icon: <FaHistory />, href: "/bbps/history" },
+    { title: "New Bill Payment", icon: <FaEdit />, href: "/bbps-services/bbps/new" },
+    { title: "BBPS History", icon: <FaHistory />, href: "/bbps-services/bbps/history" },
   ],
   History: [
-    { title: "All Transactions", icon: <FaHistory />, href: "/transactions" },
-    { title: "Download Report", icon: <FaChartLine />, href: "/transactions/report" },
+    { title: "All Transactions", icon: <FaHistory />, href: "/bbps-services/transactions" },
+    { title: "Download Report", icon: <FaChartLine />, href: "/bbps-services/transactions/report" },
   ],
   Wallet: [
-    { title: "Add Money", icon: <FaEdit />, href: "/wallet/add" },
-    { title: "Send Money", icon: <FaShareAlt />, href: "/wallet/send" },
-    { title: "Withdraw", icon: <FaTrash />, href: "/wallet/withdraw" },
+    { title: "Add Money", icon: <FaEdit />, href: "/bbps-services/wallet/add" },
+    { title: "Send Money", icon: <FaShareAlt />, href: "/bbps-services/wallet/send" },
+    { title: "Withdraw", icon: <FaTrash />, href: "/bbps-services/wallet/withdraw" },
   ],
   Support: [
-    { title: "Contact Support", icon: <FaHeadset />, href: "/support/contact" },
-    { title: "Raise Ticket", icon: <FaEdit />, href: "/support/ticket" },
+    { title: "Contact Support", icon: <FaHeadset />, href: "/bbps-services/support/contact" },
+    { title: "Raise Ticket", icon: <FaEdit />, href: "/bbps-services/support/ticket" },
   ],
   Taxation: [
-    { title: "Apply", icon: <FaFileInvoiceDollar />, href: "/taxation/apply" },
-    { title: "Reports", icon: <FaChartLine />, href: "/taxation/reports" },
+    { title: "Apply", icon: <FaFileInvoiceDollar />, href: "/bbps-services/taxation/apply" },
+    { title: "Reports", icon: <FaChartLine />, href: "/bbps-services/taxation/reports" },
   ],
   Electricity: [
-    { title: "Pay Bill", icon: <FaEdit />, href: "/electricity/pay" },
-    { title: "Bill History", icon: <FaHistory />, href: "/electricity/history" },
+    { title: "Pay Bill", icon: <FaEdit />, href: "/bbps-services/electricity/pay" },
+    { title: "Bill History", icon: <FaHistory />, href: "/bbps-services/electricity/history" },
   ],
   DTH: [
-    { title: "Recharge DTH", icon: <FaEdit />, href: "/dth/recharge" },
-    { title: "DTH History", icon: <FaHistory />, href: "/dth/history" },
+    { title: "Recharge DTH", icon: <FaEdit />, href: "/bbps-services/dth/recharge" },
+    { title: "DTH History", icon: <FaHistory />, href: "/bbps-services/dth/history" },
   ],
   Gas: [
-    { title: "Book Cylinder", icon: <FaEdit />, href: "/gas/book" },
-    { title: "Gas History", icon: <FaHistory />, href: "/gas/history" },
+    { title: "Book Cylinder", icon: <FaEdit />, href: "/bbps-services/gas/book" },
+    { title: "Gas History", icon: <FaHistory />, href: "/bbps-services/gas/history" },
   ],
   Loan: [
-    { title: "Apply Loan", icon: <FaEdit />, href: "/loan/apply" },
-    { title: "Loan History", icon: <FaHistory />, href: "/loan/history" },
+    { title: "Apply Loan", icon: <FaEdit />, href: "/bbps-services/loan/apply" },
+    { title: "Loan History", icon: <FaHistory />, href: "/bbps-services/loan/history" },
   ],
   Insurance: [
-    { title: "Buy Insurance", icon: <FaEdit />, href: "/insurance/buy" },
-    { title: "My Policies", icon: <FaHistory />, href: "/insurance/history" },
+    { title: "Buy Insurance", icon: <FaEdit />, href: "/bbps-services/insurance/buy" },
+    { title: "My Policies", icon: <FaHistory />, href: "/bbps-services/insurance/history" },
   ],
-  "Pan Card": [
-    { title: "Apply PAN", icon: <FaEdit />, href: "/pan-card/apply" },
-    { title: "Check Status", icon: <FaInfoCircle />, href: "/pan-card/status" },
+  PanCard: [
+    { title: "Apply PAN", icon: <FaEdit />, href: "/bbps-services/pan-card/apply" },
+    { title: "Check Status", icon: <FaInfoCircle />, href: "/bbps-services/pan-card/status" },
   ],
 };
 

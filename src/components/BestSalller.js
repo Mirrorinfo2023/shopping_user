@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FaHeart, FaRegHeart, FaStar, FaRegStar, FaShoppingCart } from "react-icons/fa";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function BestSellersSection({ products = [] }) {
   const [wishlist, setWishlist] = useState({});
@@ -49,9 +50,12 @@ export default function BestSellersSection({ products = [] }) {
     <section className="my-12 px-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-blue-800">Best Sellers</h2>
-        <a href="#" className="text-blue-600 hover:underline text-sm font-medium">
-          View All
-        </a>
+       <Link
+              href="/viewall-product"
+              className="text-blue-600 hover:underline text-sm"
+            >
+              View All
+            </Link>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

@@ -93,32 +93,26 @@ export default function ProductCard({ product }) {
         <span className="text-blue-600 font-bold text-base">₹{price}</span>
       </div>
 
-<div className="flex justify-between items-center mt-4 text-gray-600 px-4 md:px-6 lg:px-10">
-  <IconButton
-    icon={FaHeart}
-    title="Wishlist"
-    colorClass="text-orange-500"
-    count={wishlistCount}
-  />
-  <IconButton
-    icon={FaShoppingCart}
-    title="Cart"
-    colorClass="text-blue-600"
-    count={cartCount}
-  />
-  {/* <IconButton
-    icon={FaClipboardList}
-    title="Orders"
-    colorClass="text-green-600"
-    count={orderCount}
-  /> */}
-  <IconButton
-    icon={FaShareAlt}
-    title="Share"
-    colorClass="text-gray-500"
-    count={shareCount}
-  />
-</div>
+      <div className="flex justify-between items-center mt-4 text-gray-600 px-4 md:px-6 lg:px-10">
+        <IconButton
+          icon={FaHeart}
+          title="Wishlist"
+          colorClass="text-orange-500"
+          count={wishlistCount}
+        />
+        <IconButton
+          icon={FaShoppingCart}
+          title="Cart"
+          colorClass="text-blue-600"
+          count={cartCount}
+        />
+        <IconButton
+          icon={FaShareAlt}
+          title="Share"
+          colorClass="text-gray-500"
+          count={shareCount}
+        />
+      </div>
 
     </div>
   );

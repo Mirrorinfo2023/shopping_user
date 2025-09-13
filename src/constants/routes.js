@@ -1,29 +1,21 @@
+// src/constants/routes.js
+// Centralized route paths for your app
+import React from "react";
+import Link from "next/link";
+import LoginScreen from "@/app/auth/login/page";
+
 const routes = {
-  login: '/auth/login',
-  createAccount: '/auth/createaccount',
+  home: "/",
+  dashboard: "/pages/dashboard",   
+  viewAllProducts: "/viewall-product",
+  checkout: "/checkout",
+  checkoutPayment: "/shopping/payment",
+  loanApply: "/loan/apply",
+  rechargeHistory: "/recharge/history",
+  login: "/auth/login", 
 
-  home: '/',
-  aboutUs: '/aboutus',
-  dashboard: 'pages/dashboard',
-  cart: '/cart',
-  shopping: '/shopping',
 
-  mirrorBusiness: '/mirror-business',
-  mirrorNursing: '/mirror-nursing',
-  mirrorShopping: '/mirror-shopping',
-  mirrorVendor: '/mirror-vendor',
-  mirrorGame: '/game',
 
-  productPage: '/products',
-
-  wishlist: '/wishlist',
-  orders: '/orders',
-  profile: '/profile',
-  notifications: '/notifications',
-
-  demoFlashSale: '/demo/flash-sale',
-  demoProductCard: '/demo/product-card',
-  demoHeroBanner: '/demo/hero-banner',
 };
 
 export default routes;

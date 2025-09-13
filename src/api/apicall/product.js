@@ -1,30 +1,34 @@
-import { apiRequest } from "../client";
-import { ENDPOINTS } from "../config";
+import ApiService from "@/api/client";
 
-export const getAuthToken = () => {
-  return localStorage.getItem("token");
-};
-
-export const setAuthToken = (token) => {
-  if (token) {
-    localStorage.setItem("token", token);
+// Get all products
+export const fetchProducts = async () => {
+  const res = await ApiService.get("products/basic");
+  if (res.status) {
+    return res.data?.data || res.data || [];
   }
+  return [];
 };
 
-export const clearAuthData = () => {
-  localStorage.removeItem("token");
-};
-
-export const addProduct = async (data) => {
-  try {
-    const response = await apiRequest.post(ENDPOINTS.PRODUCT.CREATE, data);
-
-    return response.data;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
+// Get single product by id
+export const fetchProductById = async (id) => {
+  const res = await ApiService.get(`products/${id}`);
+  if (res.status) {
+    return res.data;
   }
+  return null;
+};
+
+// Create product
+export const createProduct = async (payload) => {
+  return await ApiService.post("products/create", payload);
+};
+
+// Update product
+export const updateProduct = async (id, payload) => {
+  return await ApiService.put(`products/${id}`, payload);
+};
+
+// Delete product
+export const deleteProduct = async (id) => {
+  return await ApiService.post(`products/${id}`);
 };

@@ -1,75 +1,17 @@
-import { apiRequest } from "../client";
-import { ENDPOINTS } from "../config";
+// src/services/CategoryService.js
+import ApiService from "@/api/client";
+import API_PATHS from "@/constants/api_paths";
 
-export const addCategory = async (categorydata) => {
-  try {
-    const response = await apiRequest.post(ENDPOINTS.CATEGORY.ADD, categorydata);
-    const categoryresponse = response.data;
-    return categoryresponse;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
-  }
-};
+const CategoryService = {
+  getAllCategories: async () => {
+    return await ApiService.get(API_PATHS.GET_ALL_CATEGORIES);
+  },
 
-export const listCategory = async (filter) => {
-  try {
-    const response = await apiRequest.get(ENDPOINTS.CATEGORY.ALL(filter));
-    const categoryresponse = response.data;
-    return categoryresponse;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
-  }
+  getCategoryById: async (catId) => {
+    return await ApiService.get(API_PATHS.GET_CATEGORY_BY_ID(catId));
+  },
+
+
 };
 
-export const toggleCategory = async (catrgory, action) => {
-  try {
-    const response = await apiRequest.put(ENDPOINTS.CATEGORY.TOGGLE(catrgory), {
-      is_active: action,
-    });
-    const categoryresponse = response.data;
-    return categoryresponse;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
-  }
-};
-export const deleteToggle = async (catrgory, action) => {
-  try {
-    const response = await apiRequest.put(ENDPOINTS.CATEGORY.TOGGLEDELETE(catrgory), {
-      is_deleted: action,
-    });
-    const categoryresponse = response.data;
-    return categoryresponse;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
-  }
-};
-
-export const editCategoryData = async (catrgory) => {
-  try {
-    const response = await apiRequest.put(ENDPOINTS.CATEGORY.UPDATE, catrgory);
-    const categoryresponse = response.data;
-    return categoryresponse;
-  } catch (error) {
-    console.error("Login error:", error);
-    return {
-      success: false,
-      message: error.response?.data?.message || "Login failed. Please check your credentials.",
-    };
-  }
-};
+export default CategoryService;

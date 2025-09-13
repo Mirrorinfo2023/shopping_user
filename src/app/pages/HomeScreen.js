@@ -1,12 +1,11 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import routes from '../../constants/routes';
+import Link from "next/link"; 
 
-import Shopping from "./Shopping.js";
-import ExpandableRowWithBoxes from "../../components/PopupMenu";
-import ServiceDropdownRow from "../../components/ServiceDropdownRow";
+import Shopping from "./Shopping";
+import ServiceDropdownRow from "@/components/ServiceDropdownRow";
 import {
   FaPhoneAlt,
   FaMoneyCheckAlt,
@@ -27,6 +26,8 @@ import {
   FaInfoCircle,
   FaIdCard,
 } from "react-icons/fa";
+import ReviewForm from "@/components/api_components/review/create_review";
+
 
 
 function getGreeting() {
@@ -108,6 +109,12 @@ export default function HomeScreen() {
         </div>
       </div> */}
 
+            {/* <Link href={routes.login}>
+            <div className="text-base font-semibold text-white bg-orange-500 px-4 py-1 rounded-full shadow hover:bg-orange-600 cursor-pointer">
+              Login
+            </div>
+          </Link> */}
+
       <div className="flex justify-between items-center mt-2">
         <div className="text-xl opacity-90 font-medium">
           Welcome to Mirror Services
@@ -118,6 +125,12 @@ export default function HomeScreen() {
         </div>
 
       </div>
+      <div className="mt-6">
+  <ReviewForm 
+    productId="6887a99231f4d4401ebbb90a" 
+    customerId="12345" 
+  />
+</div>
 
 
 

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import routes from '@/constants/routes';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   FaShoppingCart,
@@ -15,6 +16,7 @@ import {
   FaUserTie,
 } from 'react-icons/fa';
 import { MdLogin } from 'react-icons/md';
+import { motion } from 'framer-motion';
 
 const sampleProducts = [
   { name: 'Smart Watch', slug: 'smart-watch' },
@@ -34,9 +36,9 @@ function getGreeting() {
 
 const navItems = [
   { label: 'Home', href: '/', icon: <FaHome /> },
-  { label: 'Media', href: '/social', icon: <FaShareAlt /> },
-  { label: 'Leads', href: '/leads', icon: <FaUsers /> },
-  { label: 'Affiliates', href: '/affiliates', icon: <FaUserTie /> },
+  { label: 'Media', href: '/bbps-services/social', icon: <FaShareAlt /> },
+  { label: 'Leads', href: '/bbps-services/leads', icon: <FaUsers /> },
+  { label: 'Affiliates', href: '/bbps-services/affiliates', icon: <FaUserTie /> },
 ];
 
 const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
@@ -60,7 +62,10 @@ const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
       <div className="w-full">
         <div className="flex flex-wrap justify-between items-center px-4 md:px-12 lg:px-24 py-3">
           {/* Left: Logo + Greeting */}
-          <div className="flex items-center gap-2">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="flex items-center gap-2"
+          >
             <Link href="/">
               <Image
                 src="/logo.png"
@@ -72,10 +77,12 @@ const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
             </Link>
             <span className="text-sm font-bold hidden sm:inline">
               <span className="text-blue-600">Good</span>{' '}
-              <span className="text-orange-500">{greeting.split(' ')[1]}</span>{' '}
+              <span className="text-orange-500">
+                {greeting.split(' ')[1]}
+              </span>{' '}
               {greeting.split(' ')[2] || ''}
             </span>
-          </div>
+          </motion.div>
 
           {/* Middle: Search */}
           <div className="flex-1 max-w-md mx-4 relative">
@@ -87,94 +94,118 @@ const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
               placeholder="Search for products..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-8 pr-2 py-2 border border-blue-300 rounded-md text-sm"
+              className="w-full pl-8 pr-2 py-2 border border-blue-300 rounded-md text-sm focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
             />
             {query && (
-              <ul className="absolute top-full left-0 w-full bg-white border rounded-md shadow mt-1 max-h-60 overflow-y-auto z-50">
+              <motion.ul
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-full left-0 w-full bg-white border rounded-md shadow mt-1 max-h-60 overflow-y-auto z-50"
+              >
                 {filtered.length > 0 ? (
                   filtered.map((item, index) => (
-                    <li
+                    <motion.li
                       key={index}
+                      whileHover={{ scale: 1.02, backgroundColor: '#f9fafb' }}
                       onClick={() => handleSelect(item.slug)}
-                      className="p-2 hover:bg-gray-100 cursor-pointer text-sm text-black"
+                      className="p-2 cursor-pointer text-sm text-black"
                     >
                       {item.name}
-                    </li>
+                    </motion.li>
                   ))
                 ) : (
-                  <li className="p-2 text-sm text-gray-600">No results found.</li>
+                  <li className="p-2 text-sm text-gray-600">
+                    No results found.
+                  </li>
                 )}
-              </ul>
+              </motion.ul>
             )}
           </div>
 
           {/* Right: Icons */}
           <div className="flex items-center gap-4">
             {/* Wishlist */}
-            <Link href="/wishlist" title="Wishlist">
-              <div className="relative text-pink-600 cursor-pointer">
-                <FaHeart className="text-xl" />
-                {wishlistCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {wishlistCount}
-                  </span>
-                )}
-              </div>
-            </Link>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Link href="/wishlist" title="Wishlist">
+                <div className="relative text-pink-600 cursor-pointer hover:scale-110 transition-transform">
+                  <FaHeart className="text-xl" />
+                  {wishlistCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full animate-bounce">
+                      {wishlistCount}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </motion.div>
 
             {/* Cart */}
-            <Link href="/cart" title="Cart">
-              <div className="relative text-blue-600 cursor-pointer">
-                <FaShoppingCart className="text-xl" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full">
-                    {cartCount}
-                  </span>
-                )}
-              </div>
-            </Link>
+            <motion.div whileTap={{ scale: 0.9 }}>
+              <Link href="/cart" title="Cart">
+                <div className="relative text-blue-600 cursor-pointer hover:scale-110 transition-transform">
+                  <FaShoppingCart className="text-xl" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full animate-pulse">
+                      {cartCount}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            </motion.div>
 
             {/* Profile */}
-            <Link href="/profile" title="Profile">
-              <FaUserCircle className="text-blue-600 text-xl cursor-pointer" />
-            </Link>
+            <motion.div whileHover={{ rotate: 15 }} whileTap={{ scale: 0.9 }}>
+              <Link href="/profile" title="Profile">
+                <FaUserCircle className="text-blue-600 text-xl cursor-pointer" />
+              </Link>
+            </motion.div>
 
             {/* Become Seller */}
-            <Link href="/seller" title="Become a Seller">
-              <div className="flex items-center gap-1 px-2 py-1 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white text-sm cursor-pointer">
-                <FaUserTie className="text-sm" />
-                <span className="hidden sm:inline">Become Seller</span>
-              </div>
-            </Link>
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link href="/bbps-services/seller" title="Become a Seller">
+                <div className="flex items-center gap-1 px-2 py-1 border border-blue-600 text-blue-600 rounded-md hover:bg-blue-600 hover:text-white text-sm cursor-pointer transition-colors">
+                  <FaUserTie className="text-sm" />
+                  <span className="hidden sm:inline">Become Seller</span>
+                </div>
+              </Link>
+            </motion.div>
 
             {/* Login */}
-            <Link href="/auth/login" passHref title="Login">
-  <span className="flex items-center gap-1 text-blue-600 hover:underline cursor-pointer">
-    <MdLogin className="text-xl" />
-    Login
-  </span>
-</Link>
+            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+              <Link href={routes.login} passHref title="Login">
+                <span className="flex items-center gap-1 text-blue-600 hover:underline cursor-pointer">
+                  <MdLogin className="text-xl" />
+                  Login
+                </span>
+              </Link>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* Bottom Nav Bar */}
-      <nav className="flex justify-around items-center gap-2 py-2 px-4 md:px-12 lg:px-24 bg-blue-100 text-blue-700 font-medium text-sm">
+      <nav className="flex justify-around items-center gap-2 py-2 px-4 md:px-12 lg:px-24 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-medium text-sm">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
-            <Link key={item.href} href={item.href}>
-              <div
-                className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
-                  isActive
-                    ? 'bg-blue-700 text-white'
-                    : 'bg-white text-blue-700 hover:bg-blue-600 hover:text-white'
-                }`}
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </div>
-            </Link>
+            <motion.div
+              key={item.href}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link href={item.href}>
+                <div
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
+                    isActive
+                      ? 'bg-blue-700 text-white shadow-md'
+                      : 'bg-white text-blue-700 hover:bg-blue-600 hover:text-white'
+                  }`}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </div>
+              </Link>
+            </motion.div>
           );
         })}
       </nav>

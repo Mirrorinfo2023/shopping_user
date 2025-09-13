@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import ProductCard from './ProductCard';
+import ProductCard from '@/components/ProductCard';
 
 export default function FlashSale({ products = [] }) {
   const [timeLeft, setTimeLeft] = useState('00:00:00');

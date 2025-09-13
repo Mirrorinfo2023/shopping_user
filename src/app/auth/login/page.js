@@ -1,96 +1,130 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { MdPerson, MdLock, MdVisibility, MdVisibilityOff } from 'react-icons/md';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import React, { useState } from "react";
+import { TextField, Button, Box, Typography, Paper } from "@mui/material";
+import { encrypt, decryptMethod } from "../../../api/cripto";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
-export default function LoginScreen() {
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [mobile, setMobile] = useState('');
-  const [password, setPassword] = useState('');
+const LoginScreen = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log('Login:', mobile, password);
-    // TODO: Add API logic here
+  const handleLogin = async () => {
+    if (!username || !password) {
+      alert("Please enter both username and password");
+      return;
+    }
+
+    const payload = {
+      username,
+      password,
+      app_key: "com.mirrorinfo", // must match backend expectation
+    };
+
+    const encrypted = encrypt(JSON.stringify(payload));
+    setLoading(true);
+
+    try {
+      console.log("🔹 Raw payload:", payload);
+      console.log("🔹 Encrypted payload:", encrypted);
+
+      const res = await axios.post(
+        "https://api.mayway.in/api/users/2736fab291f04e69b62d490c3c09361f5b82461a",
+        { data: encrypted },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      console.log("✅ Status:", res.status);
+      console.log("✅ Raw response:", res.data);
+
+      let parsedResponse = null;
+
+      if (res.data?.data) {
+        // Backend sent encrypted response
+        try {
+          const decrypted = decryptMethod(res.data.data);
+          console.log("🔓 Decrypted response:", decrypted);
+          parsedResponse = JSON.parse(decrypted);
+        } catch (err) {
+          console.error("❌ Failed to decrypt server response:", err);
+          alert("Error decrypting server response.");
+          return;
+        }
+      } else {
+        // Backend sent plain JSON
+        parsedResponse = res.data;
+      }
+
+      if (parsedResponse?.success) {
+        localStorage.setItem("user", JSON.stringify(parsedResponse));
+        router.push("/dashboard");
+      } else {
+        alert(parsedResponse?.message || "Invalid credentials, please try again.");
+      }
+    } catch (err) {
+      console.error("❌ Login failed:", err);
+
+      if (err.response) {
+        console.error("❌ Server status:", err.response.status);
+        console.error("❌ Server response:", err.response.data);
+        alert(`Login failed: ${err.response.data?.message || "Server error"}`);
+      } else if (err.request) {
+        console.error("❌ No response from server:", err.request);
+        alert("No response from server. Please check your network.");
+      } else {
+        console.error("❌ Error details:", err.message);
+        alert("Something went wrong. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fef6fb] px-4 py-10">
-      <div className="w-full max-w-md bg-white p-6 rounded-2xl shadow-md text-center">
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <Image
-            src="/logo.png"
-            alt="Logo"
-            width={100}
-            height={100}
-            className="rounded-full"
-          />
-        </div>
+    <Box className="flex items-center justify-center min-h-screen bg-gray-100">
+      <Paper elevation={3} className="p-6 w-96">
+        <Typography variant="h5" gutterBottom>
+          Login
+        </Typography>
 
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Login</h2>
+        <TextField
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
 
-        {/* Mobile Number */}
-        <div className="flex items-center bg-gray-100 px-4 py-3 rounded-xl mb-4">
-          <MdPerson className="text-gray-600 text-lg" />
-          <input
-            type="tel"
-            placeholder="Mobile Number"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            className="ml-3 w-full bg-transparent outline-none text-base text-gray-800"
-          />
-        </div>
+        <TextField
+          label="Password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          fullWidth
+          margin="normal"
+        />
 
-        {/* Password */}
-        <div className="flex items-center bg-gray-100 px-4 py-3 rounded-xl mb-4">
-          <MdLock className="text-gray-600 text-lg" />
-          <input
-            type={passwordVisible ? 'text' : 'password'}
-            placeholder="Enter Your Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="ml-3 w-full bg-transparent outline-none text-base text-gray-800"
-          />
-          <button
-            type="button"
-            onClick={() => setPasswordVisible(!passwordVisible)}
-            className="ml-2 text-gray-600"
-          >
-            {passwordVisible ? <MdVisibilityOff /> : <MdVisibility />}
-          </button>
-        </div>
-
-        {/* Login Button */}
-        <button
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          sx={{ mt: 2 }}
           onClick={handleLogin}
-          className="w-full bg-gradient-to-r from-blue-800 to-blue-500 py-3 rounded-full text-white font-semibold mb-4"
+          disabled={loading}
         >
-          Log In
-        </button>
-
-        {/* Links */}
-        <div className="flex justify-between text-sm text-black px-1 mb-2">
-          <span className="cursor-pointer">Unblock Me</span>
-          <span className="cursor-pointer">Forget Password</span>
-        </div>
-
-        {/* Divider */}
-        <p className="text-sm text-gray-500 my-2">----------- OR -----------</p>
-
-        {/* Signup link */}
-        <p className="text-sm text-gray-700">
-          Don&apos;t have an account?{' '}
-          <span
-            className="text-yellow-500 font-bold cursor-pointer"
-            onClick={() => router.push('/auth/signup')}
-          >
-            Sign up
-          </span>
-        </p>
-      </div>
-    </div>
+          {loading ? "Logging in..." : "Login"}
+        </Button>
+      </Paper>
+    </Box>
   );
-}
+};
+
+export default LoginScreen;
