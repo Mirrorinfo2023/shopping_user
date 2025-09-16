@@ -1,10 +1,10 @@
-// app/layout.js
+"use client";
+
+import { usePathname } from "next/navigation";
 import { Montserrat } from "next/font/google";
 import "./globals.css";
 
 import Header from "@/components/Header";
-import BottomNav from "@/components/BottomNav";
-import DisableInspect from "@/components/DisableInspect";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -12,23 +12,19 @@ const montserrat = Montserrat({
   weight: ["400", "500", "600", "700"],
 });
 
-export const metadata = {
-  title: "Mirror",
-  description: "Mirror Business Platform",
-};
-
 export default function RootLayout({ children }) {
+  const pathname = usePathname();
+
+  // Hide header/nav on login/signup pages
+  const hideHeaderNav = pathname === "/" || pathname.startsWith("/auth");
+
   return (
     <html lang="en" className={montserrat.variable}>
-      <body className="pt-[70px] font-montserrat bg-white text-black">
-        {/* Security Component */}
-        {/* <DisableInspect /> */}
-
-        <Header cartCount={3} />
+      <body className={`font-montserrat bg-white text-black ${hideHeaderNav ? "" : "pt-[70px]"}`}>
+        {!hideHeaderNav && <Header cartCount={3} />}
 
         <main className="font-sans min-h-screen">{children}</main>
 
-        {/* <BottomNav /> */}
       </body>
     </html>
   );

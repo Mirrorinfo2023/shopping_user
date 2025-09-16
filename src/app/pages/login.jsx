@@ -21,7 +21,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         localStorage.setItem("token", data.token); // token save
-        router.push("/dashboard"); // redirect
+        router.push("/home"); // redirect
       } else {
         setError(data.message || "Login failed");
       }

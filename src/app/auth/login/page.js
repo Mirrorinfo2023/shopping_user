@@ -44,8 +44,7 @@ export default function LoginPage() {
         // Save user data in localStorage
         localStorage.setItem("userData", JSON.stringify(decrypted.data));
 
-        // Redirect to dashboard
-        router.push("/dashboard");
+        router.push("/home");
       } else {
         setError(decrypted.message || "Login failed");
       }
@@ -55,7 +54,7 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">

@@ -13,66 +13,64 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
   const productName = product?.productName || product?.name || "Unnamed Product";
   const productImage = product?.images?.[0]?.url || product?.image || "/images/default-product.jpg";
   const productPrice = product?.finalPrice || product?.price || 0;
-  const originalPrice = product?.price || 0;
+  const originalPrice = product?.price || productPrice;
   const rating = product?.ratings?.average || product?.rating || 0;
   const reviewCount = product?.ratings?.count || product?.reviews || 0;
   const productDescription = product?.description || product?.shortDescription || "No description available";
 
-  // Memoized API check functions
-  const checkWishlistStatus = useCallback(async () => {
-    if (!productId) return;
-    try {
-      const response = await fetch(`/api/wishlist/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.product) {
-          const isInWishlist = data.product.some(item => item._id === productId);
-          setIsWishlisted(isInWishlist);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking wishlist status:', error);
-    }
-  }, [productId, userId]);
+  // Calculate discount
+  const discount = originalPrice > productPrice 
+    ? Math.round(((originalPrice - productPrice) / originalPrice) * 100) 
+    : 0;
 
-  const checkCartStatus = useCallback(async () => {
-    if (!productId) return;
-    try {
-      const response = await fetch(`/api/cart/get/${userId}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.data) {
-          const isProductInCart = data.data.cartItems.some(
-            item => item.productId?._id === productId || item._id === productId
-          );
-          setIsInCart(isProductInCart);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking cart status:', error);
-    }
-  }, [productId, userId]);
-
-  // Initial status check
-  useEffect(() => {
-    checkWishlistStatus();
-    checkCartStatus();
-  }, [checkWishlistStatus, checkCartStatus]);
-
+  // Format price
   const formatPrice = (price) => new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0
   }).format(price);
 
-  const calculateDiscount = () => {
-    if (!originalPrice || !productPrice || originalPrice <= productPrice) return 0;
-    return Math.round(((originalPrice - productPrice) / originalPrice) * 100);
-  };
-
-  const discount = calculateDiscount();
-
   const handleImageError = () => setImageError(true);
+
+  // Wishlist check
+  const checkWishlistStatus = useCallback(async () => {
+    if (!productId) return;
+    try {
+      const res = await fetch(`/api/wishlist/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.product) {
+          setIsWishlisted(data.product.some(item => item._id === productId));
+        }
+      }
+    } catch (err) {
+      console.error('Wishlist check error:', err);
+    }
+  }, [productId, userId]);
+
+  // Cart check
+  const checkCartStatus = useCallback(async () => {
+    if (!productId) return;
+    try {
+      const res = await fetch(`/api/cart/get/${userId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          const inCart = data.data.cartItems.some(
+            item => item.productId?._id === productId || item._id === productId
+          );
+          setIsInCart(inCart);
+        }
+      }
+    } catch (err) {
+      console.error('Cart check error:', err);
+    }
+  }, [productId, userId]);
+
+  useEffect(() => {
+    checkWishlistStatus();
+    checkCartStatus();
+  }, [checkWishlistStatus, checkCartStatus]);
 
   // Wishlist click
   const handleWishlistClick = async (e) => {
@@ -83,27 +81,16 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
     setLoadingWishlist(true);
     try {
       const url = isWishlisted ? '/api/wishlist/remove' : '/api/wishlist/add';
-      const body = isWishlisted
-        ? { productId, userId }
-        : { productId, personId: userId };
-
       const method = isWishlisted ? 'DELETE' : 'POST';
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      const body = isWishlisted ? { productId, userId } : { productId, personId: userId };
 
-      const data = await response.json();
-      if (data.success) {
-        setIsWishlisted(!isWishlisted);
-        onUpdate?.();
-      } else {
-        console.error('Wishlist update failed:', data.message);
-      }
+      const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (data.success) setIsWishlisted(!isWishlisted);
+      onUpdate?.();
     } catch (err) {
       console.error(err);
-      alert('Failed to update wishlist. Try again.');
+      alert('Wishlist update failed!');
     } finally {
       setLoadingWishlist(false);
     }
@@ -118,43 +105,37 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
     setLoadingCart(true);
     try {
       if (isInCart) {
-        const response = await fetch('/api/cart/remove', {
+        const res = await fetch('/api/cart/remove', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, productId }),
         });
-        const data = await response.json();
-        if (data.success) {
-          setIsInCart(false);
-          onUpdate?.();
-        }
+        const data = await res.json();
+        if (data.success) setIsInCart(false);
       } else {
         const cartItem = {
           productId,
-          vendorId: product?.vendorId || "default_vendor_id",
+          vendorId: product?.vendorId || "default_vendor",
           name: productName,
           variant: product?.variants?.[0] ? `${product.variants[0]?.variantName}: ${product.variants[0]?.value}` : "Default",
           quantity: 1,
-          price: product?.price || 0,
-          discount: product?.discount || 0,
+          price: originalPrice,
           finalPrice: productPrice,
+          discount,
           image: productImage
         };
-
-        const response = await fetch('/api/cart/add', {
+        const res = await fetch('/api/cart/add', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, cartItems: [cartItem] }),
         });
-        const data = await response.json();
-        if (data.success) {
-          setIsInCart(true);
-          onUpdate?.();
-        }
+        const data = await res.json();
+        if (data.success) setIsInCart(true);
       }
+      onUpdate?.();
     } catch (err) {
       console.error(err);
-      alert('Failed to update cart. Try again.');
+      alert('Cart update failed!');
     } finally {
       setLoadingCart(false);
     }
@@ -166,11 +147,11 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
     <Link href={`/products/${productId}`} className="block">
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 group relative">
 
-        {/* Wishlist */}
+        {/* Wishlist Button */}
         <button
           onClick={handleWishlistClick}
           disabled={loadingWishlist}
-          className="absolute top-2 right-2 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="absolute top-2 left-2 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors disabled:opacity-50"
           aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
           {loadingWishlist ? (
@@ -191,39 +172,34 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
           )}
         </button>
 
-        {/* Product Image */}
+        {/* Product Image + Discount + In Cart */}
         <div className="relative h-48 bg-gray-100 overflow-hidden">
           <Image
             src={imageError ? "/images/default-product.jpg" : productImage}
             alt={productName}
             fill
-            sizes="(max-width: 768px) 100vw, 33vw"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             onError={handleImageError}
           />
 
-          {/* Discount */}
-          {discount > 0 && (
-            <div className="absolute top-2 left-2 bg-amber-400 text-white text-xs font-bold px-2 py-1 rounded">
+          {/* {discount > 0 && ( */}
+            <div className="absolute top-2 right-2 bg-amber-400 text-white text-xs font-bold px-2 py-1 rounded">
               {discount}% OFF
             </div>
-          )}
+          {/* )} */}
 
-          {/* In Cart */}
           {isInCart && (
             <div className="absolute top-2 left-2 z-10">
-              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                In Cart
-              </span>
+              <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded">In Cart</span>
             </div>
           )}
         </div>
 
-        {/* Info */}
+        {/* Product Info */}
         <div className="p-3">
           {product?.brand && <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">{product.brand}</p>}
-          <h3 className="font-semibold text-sm text-gray-800 mb-2 line-clamp-2 h-10 leading-tight">{productName}</h3>
-          <h5 className="font-light text-gray-600 truncate w-full">{productDescription}</h5>
+          <h3 className="font-semibold text-sm text-gray-800 mb-1 line-clamp-2 h-10">{productName}</h3>
+          <p className="text-xs text-gray-600 mb-2 line-clamp-2">{productDescription}</p>
 
           {/* Rating */}
           {rating > 0 && (
@@ -244,7 +220,7 @@ const ProductGridCard = ({ product, userId = "12345", onUpdate }) => {
           )}
 
           {/* Price + Cart */}
-          <div className="flex items-center justify-between mt-3">
+          <div className="flex items-center justify-between mt-1">
             <div className="flex flex-col">
               <span className="text-lg font-bold text-gray-900">{formatPrice(productPrice)}</span>
               {originalPrice > productPrice && <span className="text-xs text-gray-500 line-through">{formatPrice(originalPrice)}</span>}

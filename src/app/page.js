@@ -1,6 +1,7 @@
 'use client';
-import HomeScreen from '../app/pages/HomeScreen';
+import HomeScreen from './pages/home/page';
+import LoginPage from './login/page';
 
 export default function Home() {
-  return <HomeScreen />;
+  return <LoginPage />;
 }

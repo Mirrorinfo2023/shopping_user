@@ -78,8 +78,16 @@ export default function Shopping() {
     <div className="bg-gray-50 min-h-screen pt-1 text-gray-800 rounded-t-3xl">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Category Slider */}
-     <section className="my-10">
-  <h2 className="text-xl font-bold mb-3">Shop by Category</h2>
+    <section className="my-10">
+  <div className="flex justify-between items-center mb-3">
+    <h2 className="text-xl font-bold">Category</h2>
+    <Link
+      href="/view-categories"
+      className="text-blue-600 hover:underline text-sm"
+    >
+      View All
+    </Link>
+  </div>
 
   {loading ? (
     // Shimmer Effect
@@ -97,7 +105,7 @@ export default function Shopping() {
           </div>
         ))}
       </div>
-      
+
       {/* Shimmer Pagination Dots */}
       <div className="flex justify-center mt-4 gap-2">
         {[...Array(8)].map((_, idx) => (
@@ -149,6 +157,7 @@ export default function Shopping() {
     <p className="text-gray-500">No categories found.</p>
   )}
 </section>
+
 
         {/* Hero Banner */}
         <div className="mt-8">

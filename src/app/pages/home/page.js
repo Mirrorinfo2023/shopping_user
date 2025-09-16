@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import routes from '../../constants/routes';
+import routes from '../../../constants/routes';
 import Link from "next/link"; 
 
-import Shopping from "./Shopping";
+import Shopping from "../Shopping";
 import ServiceDropdownRow from "@/components/ServiceDropdownRow";
 import {
   FaPhoneAlt,
@@ -26,7 +26,6 @@ import {
   FaInfoCircle,
   FaIdCard,
 } from "react-icons/fa";
-import ReviewForm from "@/components/api_components/review/create_review";
 
 
 
@@ -126,10 +125,7 @@ export default function HomeScreen() {
 
       </div>
       <div className="mt-6">
-  <ReviewForm 
-    productId="6887a99231f4d4401ebbb90a" 
-    customerId="12345" 
-  />
+
 </div>
 
 
@@ -161,7 +157,6 @@ export default function HomeScreen() {
           </Link> */}
 
       <div>
-        {/* <h1 className="text-2xl font-bold text-center my-4">Mirror Shopping</h1> */}
         <Shopping />
       </div>
 

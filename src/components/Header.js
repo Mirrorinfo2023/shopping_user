@@ -35,7 +35,7 @@ function getGreeting() {
 }
 
 const navItems = [
-  { label: 'Home', href: '/', icon: <FaHome /> },
+  { label: 'Home', href: '/pages/home', icon: <FaHome /> },
   { label: 'Media', href: '/bbps-services/social', icon: <FaShareAlt /> },
   { label: 'Leads', href: '/bbps-services/leads', icon: <FaUsers /> },
   { label: 'Affiliates', href: '/bbps-services/affiliates', icon: <FaUserTie /> },
@@ -55,6 +55,17 @@ const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
     setQuery('');
     router.push(`/products/${slug}`);
   };
+const handleLogout = () => {
+  // Clear login state
+  localStorage.removeItem("isLoggedIn");
+
+  // Redirect to login page and replace current history entry
+  router.replace("/");
+
+  // Optional: force reload to remove any cached state
+  window.location.href = "/";
+};
+
 
   return (
     <header className="fixed top-0 w-full bg-white shadow z-50">
@@ -171,44 +182,47 @@ const Header = ({ cartCount = 3, wishlistCount = 2 }) => {
             </motion.div>
 
             {/* Login */}
+            {/* Login / Logout */}
             <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-              <Link href={routes.login} passHref title="Login">
-                <span className="flex items-center gap-1 text-blue-600 hover:underline cursor-pointer">
-                  <MdLogin className="text-xl" />
-                  Login
-                </span>
-              </Link>
+              <span
+                onClick={handleLogout}
+                className="flex items-center gap-1 text-blue-600 hover:underline cursor-pointer"
+              >
+                <MdLogin className="text-xl" />
+                Logout
+              </span>
             </motion.div>
+
           </div>
         </div>
       </div>
 
-      {/* Bottom Nav Bar */}
-      <nav className="flex justify-around items-center gap-2 py-2 px-4 md:px-12 lg:px-24 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 font-medium text-sm">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <motion.div
-              key={item.href}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Link href={item.href}>
-                <div
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full transition-colors ${
-                    isActive
-                      ? 'bg-blue-700 text-white shadow-md'
-                      : 'bg-white text-blue-700 hover:bg-blue-600 hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  <span>{item.label}</span>
-                </div>
-              </Link>
-            </motion.div>
-          );
-        })}
-      </nav>
+    {/* Bottom Nav Bar */}
+<nav className="flex justify-around items-center py-2 px-4 md:px-12 lg:px-24 bg-white shadow-inner border-t border-gray-200 text-gray-700 font-medium text-sm">
+  {navItems.map((item) => {
+    const isActive = pathname === item.href;
+    return (
+      <Link key={item.href} href={item.href}>
+        <div className="flex flex-col items-center cursor-pointer group relative px-3 py-1">
+          {/* Icon */}
+          <div className={`text-xl transition-colors duration-300 ${isActive ? 'text-blue-600' : 'text-gray-600'} group-hover:text-blue-600`}>
+            {item.icon}
+          </div>
+          {/* Label */}
+          <span className={`text-xs transition-colors duration-300 ${isActive ? 'text-blue-600 font-semibold' : 'text-gray-600'} group-hover:text-blue-600`}>
+            {item.label}
+          </span>
+          {/* Bottom line on hover or active */}
+          <span className={`absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 transition-transform duration-300
+            ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'} origin-center`}>
+          </span>
+        </div>
+      </Link>
+    );
+  })}
+</nav>
+
+
     </header>
   );
 };
