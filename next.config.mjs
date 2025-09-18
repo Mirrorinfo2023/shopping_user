@@ -10,9 +10,9 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        // destination: "http://localhost:3002/api/:path*", // backend
+        destination: "http://localhost:3002/api/:path*", // backend
 
-        destination: "https://secure1.mirrorinfo.in/api/:path*",
+        // destination: "https://secure1.mirrorinfo.in/api/:path*",
       },
     ];
   },

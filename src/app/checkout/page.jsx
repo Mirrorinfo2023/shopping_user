@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from "react";
@@ -17,9 +16,6 @@ const Input = ({ label, required = false, type = "text", placeholder = "" }) => 
     />
   </div>
 );
- const handleProceed = () => {
-    router.push('/checkout-payment');
-  };
 
 const AddressSection = ({ title }) => (
   <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 mb-8">
@@ -40,8 +36,13 @@ const AddressSection = ({ title }) => (
 );
 
 const Checkout = () => {
+  const router = useRouter(); // <-- Add this
+ const handleProceed = () => {
+    router.push('/checkout/checkout-payment'); // <-- Navigate to checkout-payment page
+  };
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-black text-gray-800 dark:text-white p-4 sm:p-8">
+<div className="min-h-screen bg-gray-50 dark:bg-black text-gray-800 dark:text-white p-15 sm:p-15">
+
       <h1 className="text-2xl font-bold mb-6">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -59,32 +60,33 @@ const Checkout = () => {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>Sub total</span>
-              <span>250.00</span>
+              <span>₹250.00</span>
             </div>
             <div className="flex justify-between">
               <span>Tax</span>
-              <span>12.50</span>
+              <span>₹12.50</span>
             </div>
             <div className="flex justify-between">
               <span>Shipping</span>
-              <span>0.00</span>
+              <span>₹0.00</span>
             </div>
             <div className="flex justify-between text-red-500">
               <span>Discount on product</span>
-              <span> 0.00</span>
+              <span>₹0.00</span>
             </div>
             <hr className="my-2 border-gray-300 dark:border-gray-700" />
             <div className="flex justify-between font-bold text-base">
               <span>Total</span>
-              <span>262.50</span>
+              <span>₹262.50</span>
             </div>
           </div>
-           <button
-        onClick={handleProceed}
-        className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition"
-      >
-        Proceed to Payment
-      </button>
+
+          <button
+            onClick={handleProceed}
+            className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition"
+          >
+            Proceed to Payment
+          </button>
         </div>
       </div>
     </div>

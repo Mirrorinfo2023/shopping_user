@@ -208,7 +208,7 @@ export default function Cart({ userId = "12345" }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 p-4 md:p-10">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50 p-14 md:p-15">
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Product Details */}
         <div className="md:col-span-2 bg-white p-4 rounded shadow border border-blue-100">

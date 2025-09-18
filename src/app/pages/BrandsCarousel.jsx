@@ -46,12 +46,12 @@ export default function BrandsCarousel() {
 
   return (
     <div className="w-full p-4 bg-white overflow-hidden">
-      <div className="flex justify-between items-center mb-3">
+      {/* <div className="flex justify-between items-center mb-3">
         <h2 className="text-lg font-bold">Brands</h2>
         <a href="/viewall-product" className="text-sm text-blue-600 hover:underline">
           View All &rarr;
         </a>
-      </div>
+      </div> */}
 
       <div
         ref={scrollRef}
