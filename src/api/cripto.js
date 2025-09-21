@@ -53,8 +53,8 @@ export const decryptMethod = (encryptedText) => {
 
 
 // Example usage:
-const originalText = {"username":"7821956869","password":"0000","app_key":"com.mirrorinfo"};
-const encrypted = encrypt(JSON.stringify(originalText));
-console.log("Encrypted:", encrypted);
-const decrypted = decryptMethod(encrypted);
-console.log("Decrypted:", decrypted);
+// const originalText = {"username":"7821956869","password":"0000","app_key":"com.mirrorinfo"};
+// const encrypted = encrypt(JSON.stringify(originalText));
+// console.log("Encrypted:", encrypted);
+// const decrypted = decryptMethod(encrypted);
+// console.log("Decrypted:", decrypted);

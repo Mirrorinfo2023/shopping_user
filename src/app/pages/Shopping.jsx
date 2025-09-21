@@ -52,7 +52,7 @@ export default function Shopping() {
     const fetchCategories = async () => {
       try {
         const res = await fetch(
-          '/api/catagory/getallcategories' 
+          'https://secure1.mirrorhub.in/api/catagory/getallcategories'
         );
 
         if (!res.status) throw new Error('Failed to fetch categories');

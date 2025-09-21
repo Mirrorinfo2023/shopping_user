@@ -1,64 +1,59 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
+import { useState } from "react";
+import axios from "axios";
 
-const CartAdd = ({ userId, product }) => {
+export default function CartAdd({ userId, product }) {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [added, setAdded] = useState(false);
 
   const handleAddToCart = async () => {
+    if (!userId || !product?._id) return;
+
     setLoading(true);
-    setMessage('');
 
     try {
-      // Prepare cart item payload
-      const cartItem = {
-        productId: product._id,
-        vendorId: product.vendorId || '', // make sure vendorId exists
-        name: product.productName,
-        variant: product.variant || '', // e.g., "Color: Gray / Storage: 512GB"
-        quantity: product.quantity || 1,
-        price: product.price,
-        discount: product.discount || 0,
-        finalPrice: product.finalPrice,
-        image: product.thumbnail || (product.images?.[0]?.url || '')
+      const payload = {
+        userId,
+        cartItems: [
+          {
+            productId: product._id,
+            vendorId: product.vendorId || "",
+            name: product.productName,
+            variant: product.variant || "Default",
+            quantity: product.quantity || 1,
+            price: product.price || 0,
+            discount: product.discount || 0,
+            finalPrice: product.finalPrice || product.price || 0,
+            image: product.thumbnail || ""
+          }
+        ]
       };
 
-      const res = await fetch('/api/cart/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          cartItems: [cartItem],
-        }),
+      const res = await axios.post("https://secure1.mirrorhub.in/api/cart/add", payload, {
+        headers: { "Content-Type": "application/json" }
       });
 
-      const data = await res.json();
-      if (data.success) {
-        setMessage('Added to cart successfully!');
+      if (res.data.success) {
+        setAdded(true);
+        alert("Product added to cart!");
       } else {
-        setMessage(`Failed: ${data.message || 'Unknown error'}`);
+        alert(res.data.message || "Failed to add to cart.");
       }
     } catch (err) {
-      setMessage('Error: ' + err.message);
+      console.error("Add to cart error:", err);
+      alert("Error adding to cart!");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div>
-      <button
-        onClick={handleAddToCart}
-        disabled={loading}
-        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400"
-      >
-        {loading ? 'Adding...' : 'Add to Cart'}
-      </button>
-      {message && <p className="mt-2 text-sm">{message}</p>}
-    </div>
+    <button
+      onClick={handleAddToCart}
+      className={`flex-1 py-3 px-6 rounded-lg font-medium text-white transition-colors ${added ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}`}
+      disabled={loading || added}
+    >
+      {loading ? "Adding..." : added ? "Added" : "Add to Cart"}
+    </button>
   );
-};
-
-export default CartAdd;
+}

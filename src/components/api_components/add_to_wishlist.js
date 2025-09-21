@@ -1,38 +1,33 @@
 'use client';
 import React, { useState } from 'react';
-
+import axios from 'axios';
 const WishlistAdd = ({ productId, personId }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const handleAddToWishlist = async () => {
-    setLoading(true);
-    setMessage('');
+ const handleAddToWishlist = async () => {
+  setLoading(true);
+  setMessage('');
 
-    try {
-      const res = await fetch('/api/wishlist/add', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId,
-          personId,
-        }),
-      });
+  try {
+    const res = await axios.post('https://secure1.mirrorhub.in/api/wishlist/add', {
+      productId,
+      personId,
+    });
 
-      const data = await res.json();
-      if (res.status) {
-        setMessage(' Added to wishlist!');
-      } else {
-        setMessage(`Failed: ${data.message || 'Unknown error'}`);
-      }
-    } catch (err) {
-      setMessage('Error: ' + err.message);
-    } finally {
-      setLoading(false);
+    if (res.status === 200 && res.data.success) {
+      setMessage('Added to wishlist!');
+    } else {
+      setMessage(`Failed: ${res.data.message || 'Unknown error'}`);
     }
-  };
+  } catch (err) {
+    console.error('Wishlist Error:', err);
+    setMessage('Error: ' + (err.response?.data?.message || err.message));
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div>

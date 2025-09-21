@@ -18,72 +18,6 @@ export default function ProductDetailPage() {
   const [zoomPosition, setZoomPosition] = useState({ show: false, x: 0, y: 0 });
 
   const userId = "12345"; 
-  const staticProducts = {
-    "688b450473f4d3f8248c58b2": {
-      ratings: { average: 4.5, count: 128 },
-      _id: "688b450473f4d3f8248c58b2",
-      sku: "SGS24U-512GB-GRY",
-      productName: "Samsung Galaxy S24 Ultra",
-      description: "Experience the ultimate in smartphone technology with the Samsung Galaxy S24 Ultra. Featuring a revolutionary 200MP camera system, the most powerful Snapdragon 8 Gen 3 processor, and an intelligent AI-powered experience that adapts to your needs. The stunning 6.8-inch Dynamic AMOLED 2X display with 120Hz refresh rate offers an immersive viewing experience, while the titanium frame provides premium durability.",
-      shortDescription: "Galaxy S24 Ultra 512GB Gray - The Ultimate Smartphone",
-      images: [
-        {
-          url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=800&h=600&fit=crop",
-          alt: "Galaxy S24 Ultra Front View",
-          _id: "688b450473f4d3f8248c58b3"
-        },
-        {
-          url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&h=600&fit=crop",
-          alt: "Galaxy S24 Ultra Back View",
-          _id: "688b450473f4d3f8248c58b4"
-        },
-        {
-          url: "https://images.unsplash.com/photo-1556659545-ec5c1c8c0606?w=800&h=600&fit=crop",
-          alt: "Galaxy S24 Ultra Side View",
-          _id: "688b450473f4d3f8248c58c4"
-        },
-        {
-          url: "https://images.unsplash.com/photo-1616343930864-5d41a02f2c2a?w=800&h=600&fit=crop",
-          alt: "Galaxy S24 Ultra Camera Closeup",
-          _id: "688b450473f4d3f8248c58c5"
-        }
-      ],
-      thumbnail: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400&h=300&fit=crop",
-      brand: "Samsung",
-      price: 124999,
-      discount: 15,
-      finalPrice: 106249.15,
-      currency: "INR",
-      quantity: 100,
-      stockStatus: "in_stock",
-      tags: ["smartphone", "android", "samsung", "flagship"],
-      variants: [
-        { variantName: "Color", value: "Titanium Gray", additionalPrice: 0, _id: "688b450473f4d3f8248c58b5" },
-        { variantName: "Color", value: "Titanium Black", additionalPrice: 0, _id: "688b450473f4d3f8248c58c6" },
-        { variantName: "Color", value: "Titanium Violet", additionalPrice: 2000, _id: "688b450473f4d3f8248c58c7" },
-        { variantName: "Storage", value: "256GB", additionalPrice: 0, _id: "688b450473f4d3f8248c58b6" },
-        { variantName: "Storage", value: "512GB", additionalPrice: 3000, _id: "688b450473f4d3f8248c58c8" },
-        { variantName: "Storage", value: "1TB", additionalPrice: 8000, _id: "688b450473f4d3f8248c58c9" }
-      ],
-      attributes: [
-        { key: "Processor", value: "Snapdragon 8 Gen 3", _id: "688b450473f4d3f8248c58b7" },
-        { key: "Battery", value: "5000mAh", _id: "688b450473f4d3f8248c58b8" },
-        { key: "Camera", value: "200MP Quad Camera", _id: "688b450473f4d3f8248c58b9" },
-        { key: "Display", value: "6.8 inch Dynamic AMOLED", _id: "688b450473f4d3f8248c58ba" },
-        { key: "RAM", value: "12GB", _id: "688b450473f4d3f8248c58bb" },
-        { key: "Operating System", value: "Android 14", _id: "688b450473f4d3f8248c58bc" },
-        { key: "Connectivity", value: "5G, Wi-Fi 6E, Bluetooth 5.3", _id: "688b450473f4d3f8248c58bd" },
-        { key: "Water Resistance", value: "IP68", _id: "688b450473f4d3f8248c58be" }
-      ],
-      isActive: true,
-      isFeatured: true,
-      shippingInfo: {
-        freeShipping: true,
-        deliveryTime: "2-3 business days",
-        returnPolicy: "30 days returnable"
-      }
-    }
-  };
 
   useEffect(() => {
     if (!id) return;
@@ -93,7 +27,7 @@ export default function ProductDetailPage() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`/api/products/${id}`, {
+        const res = await fetch(`https://secure1.mirrorhub.in/api/products/${id}`, {
           headers: { "Content-Type": "application/json" },
         });
 

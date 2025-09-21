@@ -81,7 +81,7 @@ export default function AuthPage() {
     setError("");
 
     setTimeout(() => {
-      if (username === "admin" && password === "1234") {
+      if (username === "user" && password === "1234") {
         localStorage.setItem("isLoggedIn", "true");
         router.replace("/pages/home");
       } else {

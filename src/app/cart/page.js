@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { FaSpinner, FaExclamationTriangle, FaTrash, FaShoppingCart } from 'react-icons/fa';
+import { FaSpinner, FaTrash, FaShoppingCart } from 'react-icons/fa';
+import axios from 'axios';
 
 export default function Cart({ userId = "12345" }) {
   const router = useRouter();
@@ -12,62 +13,26 @@ export default function Cart({ userId = "12345" }) {
   const [updatingItems, setUpdatingItems] = useState(new Set());
   const [clearingCart, setClearingCart] = useState(false);
 
-  // Mock data for fallback
-  const mockCartItems = [
-    {
-      _id: "68c3eb50d0d59661b973a608",
-      productId: {
-        _id: "68b92bf4dcf049943c146448",
-        productName: "Xiaomi 13 Pro"
-      },
-      name: "Xiaomi 13 Pro",
-      variant: "Color: White / Storage: 256GB",
-      quantity: 1,
-      price: 74999,
-      discount: 10,
-      finalPrice: 67499.1,
-      image: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400&h=300&fit=crop",
-      seller: "Xiaomi Official Store",
-      size: "256GB"
-    },
-    {
-      _id: "68c3f30fd0d59661b973a688",
-      name: "Black Shoes",
-      variant: "Size 9",
-      quantity: 2,
-      price: 1200,
-      discount: 10,
-      finalPrice: 1080,
-      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop",
-      seller: "Footwear Hub",
-      size: "UK 9"
-    }
-  ];
-
   const fetchCartItems = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await fetch(`/api/cart/get/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.data) {
-            setCartItems(data.data.cartItems || []);
-            return;
-          }
+      const response = await axios.get(`https://secure1.mirrorhub.in/api/cart/get/${userId}`);
+
+      if (response.status === 200) {
+        const data = response.data;
+        if (data.success && data.data) {
+          setCartItems(data.data.cartItems || []);
+          return;
         }
-        throw new Error('Failed to fetch cart');
-      } catch (apiError) {
-        console.warn('API fetch failed, using mock data:', apiError);
-        throw apiError;
       }
 
+      throw new Error("Failed to fetch cart");
     } catch (err) {
-      console.error('Error fetching cart:', err);
-      setError('Failed to load cart. Using demo data.');
-      setCartItems(mockCartItems);
+      console.error("Error fetching cart:", err);
+      setError("Failed to load cart. Showing demo data.");
+      setCartItems([]);
     } finally {
       setLoading(false);
     }
@@ -77,7 +42,9 @@ export default function Cart({ userId = "12345" }) {
     fetchCartItems();
   }, [fetchCartItems]);
 
+  // **Save cart to localStorage before navigating to Checkout**
   const handleContinue = () => {
+    localStorage.setItem('checkoutCart', JSON.stringify(cartItems));
     router.push('/checkout');
   };
 
@@ -96,17 +63,13 @@ export default function Cart({ userId = "12345" }) {
       );
 
       try {
-        const response = await fetch('/api/cart/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            productId: item.productId?._id || item._id,
-            quantity: newQuantity
-          }),
+        const response = await axios.post('https://secure1.mirrorhub.in/api/cart/update', {
+          userId,
+          productId: item.productId?._id || item._id,
+          quantity: newQuantity
         });
-        if (!response.ok) throw new Error('Failed to update quantity');
-        const data = await response.json();
+        if (response.status !== 200) throw new Error('Failed to update quantity');
+        const data = response.data;
         if (!data.success) throw new Error('Failed to update quantity');
       } catch (updateError) {
         console.warn('API update failed, keeping local state:', updateError);
@@ -133,16 +96,14 @@ export default function Cart({ userId = "12345" }) {
       setCartItems(prev => prev.filter(i => i._id !== itemId));
 
       try {
-        const response = await fetch('/api/cart/remove', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+        const response = await axios.post('https://secure1.mirrorhub.in/api/cart/remove', {
+          data: {
             userId,
             productId: item.productId?._id || item._id
-          }),
+          }
         });
-        if (!response.ok) throw new Error('Failed to remove item');
-        const data = await response.json();
+        if (response.status !== 200) throw new Error('Failed to remove item');
+        const data = response.data;
         if (!data.success) throw new Error('Failed to remove item');
       } catch (removeError) {
         console.warn('API remove failed, keeping local state:', removeError);
@@ -168,13 +129,9 @@ export default function Cart({ userId = "12345" }) {
       setCartItems([]);
 
       try {
-        const response = await fetch('/api/cart/clear', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId }),
-        });
-        if (!response.ok) throw new Error('Failed to clear cart');
-        const data = await response.json();
+        const response = await axios.post('https://secure1.mirrorhub.in/api/cart/clear', { userId });
+        if (response.status !== 200) throw new Error('Failed to clear cart');
+        const data = response.data;
         if (!data.success) throw new Error('Failed to clear cart');
         alert('Cart cleared successfully!');
       } catch (clearError) {
@@ -190,11 +147,6 @@ export default function Cart({ userId = "12345" }) {
       setClearingCart(false);
     }
   };
-
-  const subtotal = cartItems.reduce(
-    (acc, item) => acc + (item.finalPrice || item.price) * item.quantity,
-    0
-  );
 
   if (loading) {
     return (
@@ -218,24 +170,13 @@ export default function Cart({ userId = "12345" }) {
             </h2>
 
             <div className="flex items-center gap-2">
-              {error && (
-                <div className="flex items-center bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1">
-                  <FaExclamationTriangle className="text-yellow-500 mr-1 text-sm" />
-                  <span className="text-yellow-700 text-xs">Demo data</span>
-                </div>
-              )}
-
               {cartItems.length > 0 && (
                 <button
                   onClick={clearCart}
                   disabled={clearingCart}
                   className="flex items-center gap-1 px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors disabled:opacity-50"
                 >
-                  {clearingCart ? (
-                    <FaSpinner className="animate-spin" />
-                  ) : (
-                    <FaTrash />
-                  )}
+                  {clearingCart ? <FaSpinner className="animate-spin" /> : <FaTrash />}
                   Clear Cart
                 </button>
               )}
@@ -280,7 +221,7 @@ export default function Cart({ userId = "12345" }) {
                     width={80}
                     height={80}
                     className="object-cover rounded"
-                    onError={(e) => { e.currentTarget.src='/fallback.png' }}
+                    onError={(e) => { e.currentTarget.src='/fallback.png'; }}
                   />
 
                   <div className="flex-1">
@@ -325,10 +266,6 @@ export default function Cart({ userId = "12345" }) {
                       )}
                     </div>
                   </div>
-                  <div className="text-sm text-right text-gray-600 whitespace-nowrap">
-                    <p>Sold by: {item.seller || 'Unknown Seller'}</p>
-                    <p className="text-green-600 font-medium">Free Delivery</p>
-                  </div>
                 </div>
               );
             })
@@ -344,28 +281,21 @@ export default function Cart({ userId = "12345" }) {
           <div className="space-y-2 text-sm text-gray-700">
             <div className="flex justify-between">
               <span>Total Product Price</span>
-              <span>₹{subtotal.toLocaleString('en-IN')}</span>
+              <span>₹{cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0).toLocaleString('en-IN')}</span>
             </div>
 
             {cartItems.some(item => item.discount > 0) && (
               <div className="flex justify-between text-green-600">
                 <span>Total Discount</span>
-                <span>- ₹{cartItems.reduce((acc, item) =>
-                  acc + ((item.price - (item.finalPrice || item.price)) * item.quantity), 0
-                ).toLocaleString('en-IN')}</span>
+                <span>- ₹{cartItems.reduce((acc, item) => acc + ((item.price - (item.finalPrice || item.price)) * item.quantity), 0).toLocaleString('en-IN')}</span>
               </div>
             )}
-
-            <div className="flex justify-between">
-              <span>Delivery Charges</span>
-              <span className="text-green-600">FREE</span>
-            </div>
 
             <hr />
 
             <div className="flex justify-between font-bold text-base text-lg">
               <span>Total Amount</span>
-              <span>₹{subtotal.toLocaleString('en-IN')}</span>
+              <span>₹{cartItems.reduce((acc, item) => acc + (item.finalPrice || item.price) * item.quantity, 0).toLocaleString('en-IN')}</span>
             </div>
           </div>
 
@@ -380,19 +310,6 @@ export default function Cart({ userId = "12345" }) {
           >
             {cartItems.length === 0 ? 'Cart is Empty' : 'Continue to Checkout'}
           </button>
-
-          <div className="flex items-center gap-2 mt-4 text-xs bg-gray-100 p-2 rounded">
-            <Image
-              src="https://img.icons8.com/external-flatart-icons-outline-flatarticons/64/000000/delivery.png"
-              alt="Delivery Safety"
-              width={40}
-              height={40}
-            />
-            <div>
-              <p className="font-semibold text-blue-800">Your Safety, Our Priority</p>
-              <p className="text-gray-600">We ensure your package is safe at every point of contact.</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>

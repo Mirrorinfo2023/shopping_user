@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { FaHeart, FaShoppingCart, FaTrash, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
+import {
+  FaHeart,
+  FaShoppingCart,
+  FaTrash,
+  FaSpinner,
+  FaExclamationTriangle,
+} from 'react-icons/fa';
+import axios from 'axios';
 
 export default function WishlistScreen({ userId = "12345" }) {
   const [wishlist, setWishlist] = useState([]);
@@ -10,58 +17,26 @@ export default function WishlistScreen({ userId = "12345" }) {
   const [error, setError] = useState(null);
   const [processingItems, setProcessingItems] = useState(new Set());
 
-  // Mock data for demo
-  const mockWishlist = [
-    {
-      _id: "68b92bf4dcf049943c146448",
-      productName: "Xiaomi 13 Pro",
-      description: "Xiaomi flagship with Snapdragon 8 Gen 2 and Leica cameras.",
-      finalPrice: 67499.1,
-      ratings: { average: 4.3, count: 127 },
-      images: [
-        { url: "https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400&h=300&fit=crop" }
-      ]
-    },
-    {
-      _id: "68b92bf4dcf049943c146449",
-      productName: "Samsung Galaxy S24 Ultra",
-      description: "Flagship Samsung phone with advanced camera system.",
-      finalPrice: 124999,
-      ratings: { average: 4.7, count: 289 },
-      images: [
-        { url: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop" }
-      ]
-    }
-  ];
-
+  // ✅ Fetch wishlist
   const fetchWishlist = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      try {
-        const response = await fetch(`https://secure1.mirrorhub.in/api/wishlist/${userId}`, {
-          mode: 'cors',
-          headers: { 'Accept': 'application/json' },
-        });
+      const response = await axios.get(
+        `https://secure1.mirrorhub.in/api/wishlist/${userId}`,
+        { headers: { Accept: 'application/json' } }
+      );
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setWishlist(data.product || []);
-            return;
-          }
-        }
-        throw new Error('API fetch failed');
-      } catch (apiError) {
-        console.warn('API fetch failed, using mock data:', apiError);
-        setWishlist(mockWishlist);
-        setError('Using demo data due to API restrictions.');
+      if (response.status === 200 && response.data.success) {
+        setWishlist(response.data.product || []);
+      } else {
+        throw new Error('Failed to fetch wishlist');
       }
     } catch (err) {
       console.error('Error fetching wishlist:', err);
-      setError('Failed to load wishlist. Using demo data.');
-      setWishlist(mockWishlist);
+      setError('Failed to load wishlist.');
+      setWishlist([]);
     } finally {
       setLoading(false);
     }
@@ -71,17 +46,20 @@ export default function WishlistScreen({ userId = "12345" }) {
     fetchWishlist();
   }, [fetchWishlist]);
 
+  // ✅ Remove from wishlist API
   const removeFromWishlist = async (productId) => {
     try {
-      setProcessingItems(prev => new Set(prev).add(productId));
-      setWishlist(prev => prev.filter(item => item._id !== productId));
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      setProcessingItems((prev) => new Set(prev).add(productId));
+      await axios.post("https://secure1.mirrorhub.in/api/wishlist/remove", {
+        productId,
+        personId: userId,
+      });
+      setWishlist((prev) => prev.filter((item) => item._id !== productId));
     } catch (err) {
-      console.error('Error removing item:', err);
-      alert('Failed to remove item from wishlist');
+      console.error("Error removing from wishlist:", err);
+      alert("Failed to remove item from wishlist");
     } finally {
-      setProcessingItems(prev => {
+      setProcessingItems((prev) => {
         const newSet = new Set(prev);
         newSet.delete(productId);
         return newSet;
@@ -89,18 +67,27 @@ export default function WishlistScreen({ userId = "12345" }) {
     }
   };
 
+  // ✅ Move to cart API
   const moveToCart = async (product) => {
     try {
-      setProcessingItems(prev => new Set(prev).add(product._id));
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      setProcessingItems((prev) => new Set(prev).add(product._id));
+
+      // 1. Add to cart API
+      await axios.post("https://secure1.mirrorhub.in/api/cart/add", {
+        productId: product._id,
+        personId: userId,
+        quantity: 1,
+      });
+
+      // 2. Remove from wishlist
       await removeFromWishlist(product._id);
-      alert('Item moved to cart successfully! (Demo mode)');
+
+      alert("Item moved to cart successfully!");
     } catch (err) {
-      console.error('Error moving to cart:', err);
-      alert('Failed to move item to cart');
+      console.error("Error moving to cart:", err);
+      alert("Failed to move item to cart");
     } finally {
-      setProcessingItems(prev => {
+      setProcessingItems((prev) => {
         const newSet = new Set(prev);
         newSet.delete(product._id);
         return newSet;
@@ -135,10 +122,14 @@ export default function WishlistScreen({ userId = "12345" }) {
         <div className="text-center py-12">
           <div className="bg-white rounded-xl shadow-sm p-8 max-w-md mx-auto">
             <FaHeart className="text-4xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">Your wishlist is empty</h3>
-            <p className="text-gray-500 mb-6">Save your favorite items here for later!</p>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              Your wishlist is empty
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Save your favorite items here for later!
+            </p>
             <button
-              onClick={() => window.location.href = '/'}
+              onClick={() => (window.location.href = '/')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Continue Shopping
@@ -156,7 +147,10 @@ export default function WishlistScreen({ userId = "12345" }) {
               const isProcessing = processingItems.has(item._id);
 
               return (
-                <div key={item._id} className="bg-white rounded-xl shadow hover:shadow-md transition relative">
+                <div
+                  key={item._id}
+                  className="bg-white rounded-xl shadow hover:shadow-md transition relative"
+                >
                   {isProcessing && (
                     <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
                       <FaSpinner className="animate-spin text-2xl text-blue-600" />
@@ -171,7 +165,6 @@ export default function WishlistScreen({ userId = "12345" }) {
                         fill
                         className="object-cover"
                         sizes="(max-width: 768px) 100vw, 33vw"
-                        onError={(e) => { e.currentTarget.src = '/fallback.png'; }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
@@ -181,21 +174,13 @@ export default function WishlistScreen({ userId = "12345" }) {
                   </div>
 
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-1 line-clamp-2">{item.productName}</h3>
-                    <p className="text-blue-600 font-bold text-base">₹{item.finalPrice?.toLocaleString('en-IN') || 'N/A'}</p>
-
-                    {item.ratings?.average > 0 && (
-                      <div className="flex items-center mt-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <svg key={i} className={`w-4 h-4 ${i < Math.floor(item.ratings.average) ? 'fill-current' : 'text-gray-300'}`} viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-500 ml-1">({item.ratings.count || 0})</span>
-                      </div>
-                    )}
+                    <h3 className="font-semibold text-gray-800 text-lg mb-1 line-clamp-2">
+                      {item.productName}
+                    </h3>
+                    <p className="text-blue-600 font-bold text-base">
+                      ₹
+                      {item.finalPrice?.toLocaleString('en-IN') || 'N/A'}
+                    </p>
 
                     <div className="flex justify-between items-center mt-4">
                       <button
