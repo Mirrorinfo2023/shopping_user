@@ -355,14 +355,30 @@ const UserName = ({ handleChange, onForgotPassword }) => {
             </Grid>
             {/* Don’t have an account? Sign Up */}
             <Grid item xs={12}>
-                <Typography variant="body2" className={styles.subText} sx={{ textAlign: "center", }}>
+                <Typography
+                    variant="body2"
+                    sx={{
+                        textAlign: "center",
+                        color: "text.secondary",
+                        fontSize: 14,
+                    }}
+                >
                     Don’t have an account?{" "}
-                    <span
-                        style={{ color: "#2198F3", cursor: "pointer", fontWeight: "bold" }}
-                        onClick={() => console.log("Sign Up clicked")} // replace with your navigation
+                    <Typography
+                        component="span"
+                        sx={{
+                            color: "#2198F3",
+                            fontWeight: "bold",
+                            cursor: "pointer",
+                            "&:hover": {
+                                textDecoration: "underline",
+                            },
+                            transition: "all 0.2s ease-in-out",
+                        }}
+                        onClick={() => console.log("Sign Up clicked")} // replace with navigation
                     >
                         Sign Up
-                    </span>
+                    </Typography>
                 </Typography>
             </Grid>
 
