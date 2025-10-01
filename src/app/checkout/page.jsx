@@ -2,8 +2,24 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { 
+  FaMapMarkerAlt, 
+  FaPlus, 
+  FaEdit, 
+  FaTrash, 
+  FaCheck, 
+  FaArrowLeft,
+  FaTruck,
+  FaShieldAlt,
+  FaStar,
+  FaCreditCard,
+  FaLock,
+  FaAward,
+  FaRocket
+} from "react-icons/fa";
+import { IoSparkles, IoLocation, IoWallet } from "react-icons/io5";
 
-const userId = "12345"; // Example logged-in user UUID
+const userId = "12345";
 
 const CheckoutUI = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -12,6 +28,7 @@ const CheckoutUI = () => {
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
   const [showChangeAddressModal, setShowChangeAddressModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [newAddress, setNewAddress] = useState({
     fullName: '',
     phone: '',
@@ -20,229 +37,456 @@ const CheckoutUI = () => {
     city: '',
     state: '',
     pincode: '',
-    country: '',
+    country: 'India',
   });
+
   const router = useRouter();
 
-  const handlePayment = () => {
-    // Save cart data to localStorage to use in payment page
-    localStorage.setItem('paymentCart', JSON.stringify(cartItems));
-    localStorage.setItem('paymentTotal', total.toFixed(2));
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const discount = cartItems.reduce((acc, item) => acc + ((item.price - (item.finalPrice || item.price)) * item.quantity), 0);
+  const shipping = 0;
+  const tax = subtotal * 0.18;
+  const total = subtotal - discount + shipping ;
 
-    // Navigate to payment page
-    router.push('/checkout/checkout-payment');
-  };
-  // Fetch cart and addresses
   useEffect(() => {
     const storedCart = localStorage.getItem("checkoutCart");
     if (storedCart) setCartItems(JSON.parse(storedCart));
     fetchAddresses();
   }, []);
 
-  // Fetch addresses for user
-  const fetchAddresses = () => {
-    fetch(`https://secure1.mirrorhub.in/api/addresses/getbyid/${userId}`, { method: 'GET' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          const allAddresses = data.address;
-          setAddresses(allAddresses);
-
-          const defaultAddr = allAddresses.find(a => a.isDefault) ||
-            allAddresses.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0];
-          setSelectedAddress(defaultAddr);
-        }
-      });
+  const fetchAddresses = async () => {
+    try {
+      const response = await fetch(`https://secure1.mirrorhub.in/api/addresses/getbyid/${userId}`);
+      const data = await response.json();
+      if (data.success) {
+        const allAddresses = data.address;
+        setAddresses(allAddresses);
+        const defaultAddr = allAddresses.find(a => a.isDefault) || allAddresses[0];
+        setSelectedAddress(defaultAddr);
+      }
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+    }
   };
 
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-  const discount = cartItems.reduce((acc, item) => acc + ((item.price - (item.finalPrice || item.price)) * item.quantity), 0);
-  const total = subtotal - discount;
-
-  // Add or update address
-  const handleSaveAddress = () => {
-    const apiUrl = editingAddress
-      ? `https://secure1.mirrorhub.in/api/addresses/update/${editingAddress._id}`
-      : 'https://secure1.mirrorhub.in/api/addresses/create';
-
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...newAddress, userId })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          fetchAddresses();
-          setShowAddAddress(false);
-          setEditingAddress(null);
-          setNewAddress({
-            fullName: '',
-            phone: '',
-            addressLine1: '',
-            addressLine2: '',
-            city: '',
-            state: '',
-            pincode: '',
-            country: '',
-          });
-        } else {
-          alert(data.message || "Failed to save address");
-        }
-      });
+  const handlePayment = () => {
+    if (!selectedAddress) {
+      alert("Please select an address.");
+      return;
+    }
+    setIsLoading(true);
+    
+    // Simulate loading for better UX
+    setTimeout(() => {
+      localStorage.setItem('paymentCart', JSON.stringify(cartItems));
+      localStorage.setItem('paymentTotal', total.toFixed(2));
+      router.push('/checkout/checkout-payment');
+    }, 1000);
   };
 
-  // Delete address
-  const handleDeleteAddress = (addressId) => {
-    fetch(`https://secure1.mirrorhub.in/api/addresses/remove/${addressId}`, { method: 'POST' })
-      .then(res => res.json())
-      .then(data => { if (data.success) fetchAddresses(); });
-  };
+  const handleSaveAddress = async () => {
+    try {
+      const apiUrl = editingAddress
+        ? `https://secure1.mirrorhub.in/api/addresses/update/${editingAddress._id}`
+        : 'https://secure1.mirrorhub.in/api/addresses/create';
 
-  // Select address and update default
-  const handleSelectAddress = async (addr) => {
-    setSelectedAddress(addr);
-
-    for (let a of addresses) {
-      await fetch(`https://secure1.mirrorhub.in/api/addresses/update/${a._id}`, {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...a, isDefault: a._id === addr._id })
+        body: JSON.stringify({ ...newAddress, userId })
       });
-    }
 
-    fetchAddresses();
+      const data = await response.json();
+      if (data.success) {
+        fetchAddresses();
+        setShowAddAddress(false);
+        setEditingAddress(null);
+        setNewAddress({
+          fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India'
+        });
+      } else {
+        alert(data.message || "Failed to save address");
+      }
+    } catch (error) {
+      console.error('Error saving address:', error);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      const response = await fetch(`https://secure1.mirrorhub.in/api/addresses/remove/${addressId}`, { 
+        method: 'POST' 
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchAddresses();
+        if (selectedAddress?._id === addressId) {
+          setSelectedAddress(addresses.find(addr => addr._id !== addressId) || null);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting address:', error);
+    }
+  };
+
+  const handleSelectAddress = async (addr) => {
+    setSelectedAddress(addr);
+    
+    // Update default address
+    try {
+      for (let a of addresses) {
+        await fetch(`https://secure1.mirrorhub.in/api/addresses/update/${a._id}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...a, isDefault: a._id === addr._id })
+        });
+      }
+      fetchAddresses();
+    } catch (error) {
+      console.error('Error updating address:', error);
+    }
+    
     setShowChangeAddressModal(false);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-6 lg:p-10 flex flex-col lg:flex-row gap-6">
-
-      {/* Left Column */}
-      <div className="flex-1 space-y-6">
-
-        {/* Saved / Selected Address */}
-        <div className="bg-white p-4 rounded shadow border border-gray-200">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="font-semibold text-lg">Shipping Address</h2>
-            <div className="flex gap-2">
-              {addresses.length > 1 && (
-                <button
-                  className="text-blue-600 hover:underline"
-                  onClick={() => setShowChangeAddressModal(true)}
-                >
-                  Change Address
-                </button>
-              )}
-              <button
-                className="text-blue-600 hover:underline"
-                onClick={() => { setShowAddAddress(true); setEditingAddress(null); }}
-              >
-                Add New
-              </button>
-            </div>
+  const AddressCard = ({ address, isSelected, onSelect, onEdit, onDelete }) => (
+    <div 
+      className={`p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
+        isSelected 
+          ? 'border-blue-500 bg-gradient-to-r from-blue-50 to-blue-25 shadow-lg shadow-blue-100' 
+          : 'border-gray-200 hover:border-blue-300 bg-white hover:shadow-md'
+      }`}
+      onClick={() => onSelect(address)}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-3 flex-1">
+          <div className={`p-2 rounded-full mt-1 ${
+            isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
+          }`}>
+            <IoLocation className="text-sm" />
           </div>
-          {selectedAddress ? (
-            <div className="text-sm text-gray-700">
-              <p>{selectedAddress.fullName}, {selectedAddress.phone}</p>
-              <p>{selectedAddress.addressLine1}, {selectedAddress.addressLine2}</p>
-              <p>{selectedAddress.city}, {selectedAddress.state}, {selectedAddress.pincode}</p>
-              <p>{selectedAddress.country}</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h3 className="font-semibold text-gray-900">{address.fullName}</h3>
+              {address.isDefault && (
+                <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+                  Default
+                </span>
+              )}
             </div>
-          ) : (
-            <p className="text-gray-500">No address selected.</p>
+            <p className="text-gray-700 mb-1">{address.phone}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {address.addressLine1}, {address.addressLine2}<br/>
+              {address.city}, {address.state} - {address.pincode}<br/>
+              {address.country}
+            </p>
+          </div>
+        </div>
+        
+        {isSelected && (
+          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center ml-3">
+            <FaCheck className="text-white text-xs" />
+          </div>
+        )}
+      </div>
+      
+      {!isSelected && (
+        <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(address); }}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1"
+          >
+            <FaEdit className="text-xs" />
+            Edit
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onDelete(address._id); }}
+            className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center gap-1"
+          >
+            <FaTrash className="text-xs" />
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const CartItemCard = ({ item }) => (
+    <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-100 hover:shadow-md transition-all duration-300 group">
+      <div className="relative w-20 h-20 rounded-xl overflow-hidden shadow-lg">
+        <Image 
+          src={item.image || "/placeholder.png"} 
+          alt={item.productName || "Product"} 
+          fill 
+          className="object-cover group-hover:scale-110 transition-transform duration-300"
+        />
+        <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+          {item.quantity}
+        </div>
+      </div>
+      
+      <div className="flex-1 min-w-0">
+        <h3 className="font-semibold text-gray-900 text-lg truncate">
+          {item.productName || item.name}
+        </h3>
+        <p className="text-gray-500 text-sm mt-1">{item.variant}</p>
+        <div className="flex items-center gap-3 mt-2">
+          <span className="text-gray-400 line-through text-sm">
+            ₹{item.price.toLocaleString()}
+          </span>
+          <span className="font-bold text-gray-900 text-lg">
+            ₹{(item.finalPrice || item.price).toLocaleString()}
+          </span>
+          {item.finalPrice < item.price && (
+            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">
+              Save ₹{(item.price - item.finalPrice).toLocaleString()}
+            </span>
           )}
         </div>
+      </div>
+    </div>
+  );
 
-        {/* Cart Items */}
-        <div className="bg-white p-4 rounded shadow border border-gray-200 space-y-4">
-          {cartItems.length > 0 ? cartItems.map(item => (
-            <div key={item._id} className="flex gap-4">
-              <Image src={item.image} alt={item.productName} width={80} height={80} className="rounded" />
-              <div className="flex-1">
-                <p className="font-semibold">{item.productId?.productName || item.name}</p>
-                <p className="text-gray-500 text-sm">{item.variant}</p>
-                <p className="text-gray-400 text-xs">Seller: {item.seller || 'Unknown'}</p>
-                <div className="flex gap-2 mt-1 items-center">
-                  <span className="line-through text-gray-400 text-sm">₹{item.price.toLocaleString()}</span>
-                  <span className="font-bold text-lg">₹{(item.finalPrice || item.price).toLocaleString()}</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-200/20 via-transparent to-transparent"></div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-12">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center gap-3 text-gray-600 hover:text-gray-900 transition-all duration-300 group"
+          >
+            <div className="p-3 bg-white rounded-2xl shadow-lg group-hover:shadow-xl transition-all">
+              <FaArrowLeft className="text-lg" />
+            </div>
+            <span className="font-semibold text-lg">Back to Cart</span>
+          </button>
+          
+          <div className="text-center">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-900 to-purple-900 bg-clip-text text-transparent mb-3">
+              Checkout
+            </h1>
+            <p className="text-gray-600 text-lg">Complete your order with confidence</p>
+          </div>
+          
+          <div className="flex items-center gap-2 bg-white/80 rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm">
+            <FaShieldAlt className="text-green-500 text-xl" />
+            <span className="font-semibold text-gray-900">Secure Checkout</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="xl:col-span-2 space-y-8">
+            {/* Shipping Address Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl">
+                    <FaMapMarkerAlt className="text-2xl text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">Shipping Address</h2>
+                    <p className="text-gray-600">Where should we deliver your order?</p>
+                  </div>
                 </div>
-                {/* Removed Protect Promise Fee line */}
+                
+                <div className="flex gap-3">
+                  {addresses.length > 1 && (
+                    <button 
+                      onClick={() => setShowChangeAddressModal(true)}
+                      className="px-4 py-2 border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all"
+                    >
+                      Change
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => { setShowAddAddress(true); setEditingAddress(null); }}
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all flex items-center gap-2"
+                  >
+                    <FaPlus className="text-sm" />
+                    Add New
+                  </button>
+                </div>
+              </div>
+
+              {selectedAddress ? (
+                <AddressCard
+                  address={selectedAddress}
+                  isSelected={true}
+                  onSelect={() => {}}
+                  onEdit={(addr) => { setEditingAddress(addr); setNewAddress(addr); setShowAddAddress(true); }}
+                  onDelete={handleDeleteAddress}
+                />
+              ) : (
+                <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-dashed border-gray-300">
+                  <FaMapMarkerAlt className="text-4xl text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 text-lg">No address selected</p>
+                  <button 
+                    onClick={() => setShowAddAddress(true)}
+                    className="mt-3 text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    Add your first address
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Cart Items Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl">
+                    <FaTruck className="text-2xl text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-gray-900">Order Items</h2>
+                    <p className="text-gray-600">{cartItems.length} items in your cart</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {cartItems.length === 0 ? (
+                  <div className="text-center py-12 bg-gradient-to-br from-gray-50 to-white rounded-2xl">
+                    <div className="text-6xl mb-4">🛒</div>
+                    <p className="text-gray-500 text-lg">Your cart is empty</p>
+                  </div>
+                ) : (
+                  cartItems.map((item, index) => (
+                    <CartItemCard key={item._id || index} item={item} />
+                  ))
+                )}
               </div>
             </div>
-          )) : <p className="text-gray-500">Cart is empty.</p>}
+          </div>
+
+          {/* Right Column - Order Summary */}
+          <div className="space-y-6">
+            {/* Order Summary Card */}
+            <div className="bg-gradient-to-br from-white to-blue-50/50 rounded-3xl p-8 shadow-2xl border border-white/20 backdrop-blur-sm sticky top-6">
+              <div className="text-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Order Summary</h2>
+                <div className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-900 bg-clip-text text-transparent">
+                  ₹{total.toLocaleString()}
+                </div>
+                <p className="text-gray-600">Total amount including taxes</p>
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="space-y-3 bg-white/50 rounded-2xl p-4 mb-6">
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-600">Subtotal ({cartItems.length} items)</span>
+                  <span className="font-semibold">₹{subtotal.toLocaleString()}</span>
+                </div>
+                
+                {discount > 0 && (
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-green-600 font-semibold">Discount</span>
+                    <span className="text-green-600 font-bold">- ₹{discount.toLocaleString()}</span>
+                  </div>
+                )}
+                
+              
+                
+                
+                
+                <hr className="border-gray-200 my-2" />
+                
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-lg font-bold text-gray-900">Total Amount</span>
+                  <span className="text-2xl font-bold text-blue-600">₹{total.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Savings Highlight */}
+              {discount > 0 && (
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-4 mb-6">
+                  <div className="flex items-center justify-between">
+                    <span className="text-green-800 font-semibold">🎉 You save</span>
+                    <span className="text-green-600 font-bold text-xl">₹{discount.toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Button */}
+              <button
+                onClick={handlePayment}
+                disabled={!selectedAddress || cartItems.length === 0 || isLoading}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed shadow-lg hover:shadow-xl relative overflow-hidden group"
+              >
+                {/* Animated background */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="text-lg">Processing...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <FaLock className="text-lg" />
+                    <span className="text-lg">Pay Securely</span>
+                    <IoSparkles className="text-lg group-hover:animate-pulse" />
+                  </div>
+                )}
+              </button>
+
+              {/* Security Assurance */}
+              <div className="text-center mt-6">
+                <div className="flex items-center justify-center gap-3 text-gray-600 text-sm">
+                  <FaShieldAlt className="text-green-500" />
+                  <span>256-bit Secure • SSL Encrypted • Trusted by Millions</span>
+                </div>
+              </div>
+            </div>
+
+          
+          </div>
         </div>
       </div>
 
-      {/* Right Column - Price Details */}
-      <div className="w-full lg:w-1/3 flex flex-col space-y-4">
-        <div className="bg-white p-4 rounded shadow border border-gray-200">
-          <h2 className="font-semibold text-lg mb-4">PRICE DETAILS</h2>
-          <div className="space-y-2 text-sm text-gray-700">
-            <div className="flex justify-between">
-              <span>Price ({cartItems.length} item)</span>
-              <span>₹{subtotal.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-green-600">
-              <span>Discount</span>
-              <span>− ₹{discount.toLocaleString()}</span>
-            </div>
-          </div>
-          <hr className="my-2" />
-          <div className="flex justify-between font-bold text-lg">
-            <span>Total Amount</span>
-            <span>₹{total.toLocaleString()}</span>
-          </div>
-          <p className="text-green-600 text-sm mt-1">
-            You will save ₹{discount.toFixed(2).toLocaleString('en-IN')} on this order
-          </p>        
-          </div>
-      </div>
-
-      {/* Place Order button fixed bottom */}
-       <div className="fixed bottom-0 left-0 w-full lg:w-auto lg:right-0 bg-white p-4 border-t border-gray-200 flex justify-center lg:justify-end">
-      <button
-        onClick={handlePayment}
-        className="bg-orange-500 text-white px-6 py-3 rounded font-semibold hover:bg-orange-600 transition"
-      >
-        Process to Pay ₹{Number(total.toFixed(2)).toLocaleString('en-IN')}
-      </button>
-    </div>
-
-      {/* Add / Edit Address Modal */}
+      {/* Add/Edit Address Modal */}
       {showAddAddress && (
-        <div
-          className="fixed inset-0 flex justify-center items-start z-50 pt-10  bg-opacity-140"
-          onClick={() => { setShowAddAddress(false); setEditingAddress(null); }}
-        >
-          <div
-            className="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="font-semibold text-lg mb-4">{editingAddress ? "Edit Address" : "Add Address"}</h2>
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => { setShowAddAddress(false); setEditingAddress(null); }}
-            >
-              ✕
-            </button>
-            <div className="space-y-2">
-              {["fullName", "phone", "addressLine1", "addressLine2", "city", "state", "pincode", "country"].map(field => (
-                <input
-                  key={field}
-                  type="text"
-                  placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-                  className="w-full border border-gray-300 p-2 rounded"
-                  value={newAddress[field]}
-                  onChange={(e) => setNewAddress({ ...newAddress, [field]: e.target.value })}
-                />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-start pt-10 pb-10 overflow-y-auto">
+          <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl border border-white/20 relative my-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingAddress ? "Edit Address" : "Add New Address"}
+              </h2>
+              <button 
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                onClick={() => { setShowAddAddress(false); setEditingAddress(null); }}
+              >
+                <span className="text-2xl text-gray-500">×</span>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {['fullName', 'phone', 'addressLine1', 'addressLine2', 'city', 'state', 'pincode', 'country'].map(field => (
+                <div key={field}>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+                    {field.replace(/([A-Z])/g, ' $1').trim()}
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    value={newAddress[field]}
+                    onChange={(e) => setNewAddress({...newAddress, [field]: e.target.value})}
+                    placeholder={`Enter ${field.replace(/([A-Z])/g, ' $1').toLowerCase().trim()}`}
+                  />
+                </div>
               ))}
             </div>
-            <button
-              className="mt-4 w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+
+            <button 
               onClick={handleSaveAddress}
+              className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-4 rounded-xl transition-all duration-300"
             >
-              Save
+              {editingAddress ? 'Update Address' : 'Save Address'}
             </button>
           </div>
         </div>
@@ -250,51 +494,41 @@ const CheckoutUI = () => {
 
       {/* Change Address Modal */}
       {showChangeAddressModal && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50"
-          onClick={() => setShowChangeAddressModal(false)}
-        >
-          <div
-            className="bg-white rounded-lg p-6 w-full max-w-md relative"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="font-semibold text-lg mb-4">Select Address</h2>
-            <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-              onClick={() => setShowChangeAddressModal(false)}
-            >
-              ✕
-            </button>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4" onClick={() => setShowChangeAddressModal(false)}>
+          <div className="bg-white rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-white/20 max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">Select Delivery Address</h2>
+              <button 
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                onClick={() => setShowChangeAddressModal(false)}
+              >
+                <span className="text-2xl text-gray-500">×</span>
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-96 overflow-y-auto pr-4">
               {addresses.map(addr => (
-                <div
+                <AddressCard
                   key={addr._id}
-                  className={`p-2 border rounded flex justify-between items-center ${selectedAddress?._id === addr._id ? 'border-blue-500' : 'border-gray-300'}`}
-                >
-                  <div>
-                    <p className="font-semibold">{addr.fullName}, {addr.phone}</p>
-                    <p>{addr.addressLine1}, {addr.addressLine2}</p>
-                    <p>{addr.city}, {addr.state}, {addr.pincode}</p>
-                    <p>{addr.country}</p>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <button className="text-blue-600 hover:underline text-sm" onClick={() => handleSelectAddress(addr)}>Select</button>
-                    <button
-                      className="text-green-600 hover:underline text-sm"
-                      onClick={() => { setEditingAddress(addr); setNewAddress(addr); setShowAddAddress(true); setShowChangeAddressModal(false); }}
-                    >Edit</button>
-                    <button
-                      className="text-red-600 hover:underline text-sm"
-                      onClick={() => { handleDeleteAddress(addr._id); if (selectedAddress?._id === addr._id) setSelectedAddress(null); }}
-                    >Delete</button>
-                  </div>
-                </div>
+                  address={addr}
+                  isSelected={selectedAddress?._id === addr._id}
+                  onSelect={handleSelectAddress}
+                  onEdit={(addr) => { setEditingAddress(addr); setNewAddress(addr); setShowAddAddress(true); setShowChangeAddressModal(false); }}
+                  onDelete={handleDeleteAddress}
+                />
               ))}
             </div>
+
+            <button 
+              onClick={() => { setShowAddAddress(true); setShowChangeAddressModal(false); }}
+              className="w-full mt-6 border-2 border-dashed border-gray-300 text-gray-600 hover:border-blue-500 hover:text-blue-600 font-semibold py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              <FaPlus />
+              Add New Address
+            </button>
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -28,6 +28,9 @@ import { useKeenSlider } from 'keen-slider/react';
 import 'keen-slider/keen-slider.min.css';
 import CategoryService from '@/api/apicall/category';
 import ProductList from '@/components/api_components/products';
+import ProductByCategories from '@/components/api_components/categories/categories_by_id';
+
+
 export default function Shopping() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [categories, setCategories] = useState([]);
@@ -78,85 +81,84 @@ export default function Shopping() {
     <div className="bg-gray-50 min-h-screen pt-1 text-gray-800 rounded-t-3xl">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Category Slider */}
-    <section className="my-10">
-  <div className="flex justify-between items-center mb-3">
-    <h2 className="text-xl font-bold">Category</h2>
-    <Link
-      href="/view-categories"
-      className="text-blue-600 hover:underline text-sm"
-    >
-      View All
-    </Link>
-  </div>
-
-  {loading ? (
-    // Shimmer Effect
-    <div>
-      <div className="keen-slider">
-        {[...Array(8)].map((_, index) => (
-          <div
-            key={index}
-            className="keen-slider__slide flex flex-col items-center text-center px-2"
-          >
-            <div className="bg-gray-200 rounded-full p-3 w-[80px] h-[80px] flex items-center justify-center overflow-hidden animate-pulse">
-              <div className="w-[60px] h-[60px] bg-gray-300 rounded-full"></div>
-            </div>
-            <div className="h-4 bg-gray-200 rounded mt-2 w-16 animate-pulse"></div>
+        <section className="my-10">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-xl font-bold">Category</h2>
+            <Link
+              href="/view-categories"
+              className="text-blue-600 hover:underline text-sm"
+            >
+              View All
+            </Link>
           </div>
-        ))}
-      </div>
 
-      {/* Shimmer Pagination Dots */}
-      <div className="flex justify-center mt-4 gap-2">
-        {[...Array(8)].map((_, idx) => (
-          <div
-            key={idx}
-            className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"
-          />
-        ))}
-      </div>
-    </div>
-  ) : categories.length > 0 ? (
-    <div>
-      <div ref={sliderRef} className="keen-slider">
-        {categories.map((category, index) => (
-          <div
-            key={category._id || index}
-            className="keen-slider__slide flex flex-col items-center text-center px-2"
-          >
-            <div className="bg-pink-100 rounded-full p-3 w-[80px] h-[80px] flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-110">
-              <img
-                src={category.icon || '/placeholder.png'}
-                alt={category.categoryName || 'Category'}
-                className="w-[80px] h-[80px] object-contain"
-              />
+          {loading ? (
+            // Shimmer Effect
+            <div>
+              <div className="keen-slider">
+                {[...Array(8)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="keen-slider__slide flex flex-col items-center text-center px-2"
+                  >
+                    <div className="bg-gray-200 rounded-full p-3 w-[80px] h-[80px] flex items-center justify-center overflow-hidden animate-pulse">
+                      <div className="w-[60px] h-[60px] bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded mt-2 w-16 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Shimmer Pagination Dots */}
+              <div className="flex justify-center mt-4 gap-2">
+                {[...Array(8)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="w-2 h-2 bg-gray-200 rounded-full animate-pulse"
+                  />
+                ))}
+              </div>
             </div>
-            <p className="text-sm font-medium text-gray-700 mt-2">
-              {category.categoryName}
-            </p>
-          </div>
-        ))}
-      </div>
+          ) : categories.length > 0 ? (
+            <div>
+              <div ref={sliderRef} className="keen-slider">
+                {categories.map((category, index) => (
+                  <div
+                    key={category._id || index}
+                    className="keen-slider__slide flex flex-col items-center text-center px-2"
+                  >
+                    <div className="bg-pink-100 rounded-full w-[80px] h-[80px] flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-110">
+                      <img
+                        src={category.icon ? category.icon : '/app_logo.png'}
+                        alt={category.categoryName || 'Category'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700 mt-2">
+                      {category.categoryName}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-      {/* Pagination Dots */}
-      <div className="flex justify-center mt-4 gap-2">
-        {categories.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => slider?.moveToIdx?.(idx)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              idx === currentSlide
-                ? 'bg-blue-600 w-3 h-3'
-                : 'bg-gray-300'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  ) : (
-    <p className="text-gray-500">No categories found.</p>
-  )}
-</section>
+              {/* Pagination Dots */}
+              <div className="flex justify-center mt-4 gap-2">
+                {categories.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => slider?.moveToIdx?.(idx)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentSlide
+                        ? 'bg-blue-600 w-3 h-3'
+                        : 'bg-gray-300'
+                      }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">No categories found.</p>
+          )}
+        </section>
 
 
         {/* Hero Banner */}
@@ -168,12 +170,13 @@ export default function Shopping() {
 
         <FlashDealCard />
 
-        <div>
+        {/* <div>
           <BestSellersSection products={bestSellerProducts} />
-        </div>
+        </div> */}
+        <ProductByCategories />
 
         {/* Featured Products */}
-        <section className="my-12">
+        {/* <section className="my-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Featured Products</h2>
             <Link
@@ -188,15 +191,15 @@ export default function Shopping() {
               <ProductCard key={index} product={product} />
             ))}
           </div>
-        </section>
+        </section> */}
 
         <BrandsCarousel />
-        <FeatureDeals />
+        {/* <FeatureDeals /> */}
 
         {/* Flash Sale */}
-        <section className="my-12">
+        {/* <section className="my-12">
           <FlashSale products={flashSaleProducts} />
-        </section>
+        </section> */}
 
         {/* Promotions */}
         <section className="my-12">
@@ -207,26 +210,8 @@ export default function Shopping() {
           </div>
         </section>
 
-        {/* Recommended */}
-        <section className="my-12">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">Recommended for You</h2>
-            <Link
-              href="/viewall-product"
-              className="text-blue-600 hover:underline text-sm"
-            >
-              View All
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {sampleProducts.map((product, idx) => (
-              <ProductGridCard key={idx} product={product} />
-            ))}
-          </div>
-        </section>
-
         {/* Extra Featured Products */}
-        <section className="my-12">
+        {/* <section className="my-12">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">More Featured Products</h2>
             <Link
@@ -247,7 +232,8 @@ export default function Shopping() {
               </Link>
             ))}
           </div>
-        </section>
+        </section> */}
+
       </main>
     </div>
   );

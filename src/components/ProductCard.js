@@ -101,12 +101,6 @@ export default function ProductCard({ product }) {
           count={wishlistCount}
         />
         <IconButton
-          icon={FaShoppingCart}
-          title="Cart"
-          colorClass="text-blue-600"
-          count={cartCount}
-        />
-        <IconButton
           icon={FaShareAlt}
           title="Share"
           colorClass="text-gray-500"

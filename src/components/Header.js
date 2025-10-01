@@ -141,11 +141,11 @@ const handleLogout = () => {
               <Link href="/wishlist" title="Wishlist">
                 <div className="relative text-pink-600 cursor-pointer hover:scale-110 transition-transform">
                   <FaHeart className="text-xl" />
-                  {wishlistCount > 0 && (
+                  {/* {wishlistCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full animate-bounce">
                       {wishlistCount}
                     </span>
-                  )}
+                  )} */}
                 </div>
               </Link>
             </motion.div>
@@ -155,11 +155,11 @@ const handleLogout = () => {
               <Link href="/cart" title="Cart">
                 <div className="relative text-blue-600 cursor-pointer hover:scale-110 transition-transform">
                   <FaShoppingCart className="text-xl" />
-                  {cartCount > 0 && (
+                  {/* {cartCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full animate-pulse">
                       {cartCount}
                     </span>
-                  )}
+                  )} */}
                 </div>
               </Link>
             </motion.div>
